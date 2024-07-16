@@ -1,0 +1,11 @@
+prefix=/home/hs280/PHD_Code/NaiveEntropicMeasures/.conda
+exec_prefix=/home/hs280/PHD_Code/NaiveEntropicMeasures/.conda
+libdir=/home/hs280/PHD_Code/NaiveEntropicMeasures/.conda/lib
+includedir=/home/hs280/PHD_Code/NaiveEntropicMeasures/.conda/include
+
+Name: uuid
+Description: Universally unique id library
+Version: 2.38.1
+Requires:
+Cflags: -I${includedir}/uuid
+Libs: -L${libdir} -luuid
