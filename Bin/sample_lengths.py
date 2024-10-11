@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from mpl_toolkits.mplot3d import Axes3D
 import shutil
+import ray
 
 # Import custom modules
 script_path = os.path.abspath(__file__)
@@ -211,6 +212,38 @@ def process_data(X_data, encoder_name, reducer_name, reducer, dimension, entropy
         reduced_encoded_residues = DimReduction.apply_reducer_to_data(reducer, encoded_residues.values, reducer_name)
     return pd.DataFrame(reduced_encoded_residues), reducer
 
+
+@ray.remote
+def test_single_length_remote(X_data,y_data,entropy,seq_length,split_fraction,num_runs):
+    encoder_name = 'one_hot'
+    reducer_name = 'pca'
+    model_name = 'BayesianRidge'
+    dimension = 300
+    
+    if seq_length == 0:
+        r2_test, rmse_test = r2_rmse_against_mean(y_data)
+
+    else:
+        try:
+            X_data_processed, _ = process_data(X_data, encoder_name, reducer_name, None, dimension, entropy, seq_length)
+        except:
+            return 0, np.inf
+        
+        r2_test = []
+        rmse_test = []
+        for _ in range(num_runs):
+            try:
+                result = AR.ML_SHELL(X_data_processed, y_data, model_name, split_fraction=split_fraction)
+                r2_test.append(result['metrics_df']['R2 Test'].values[0])
+                rmse_test.append(result['metrics_df']['RMSE Test'].values[0])
+            except:
+                pass
+
+        r2_test = np.average(r2_test)
+        rmse_test = np.average(rmse_test)
+    
+    return r2_test,rmse_test
+
 def test_single_length(X_data,y_data,entropy,seq_length,split_fraction,num_runs):
     encoder_name = 'one_hot'
     reducer_name = 'pca'
@@ -242,18 +275,25 @@ def test_single_length(X_data,y_data,entropy,seq_length,split_fraction,num_runs)
     return r2_test,rmse_test
 
 def brute_force_search(sequence_data, target_data, entropy, max_seq_length, split_fraction, num_runs):
-    r2_data = []
-    rmse_data = []
+    # Create lists to hold the remote tasks
+    futures = []
     lengths = []
 
+    # Launch tasks for each sequence length
     for seq_length in range(0, max_seq_length + 1):
-        #print(f"Evaluating sequence length: {seq_length}")
-        r2, rmse = test_single_length(sequence_data, target_data, entropy, seq_length, split_fraction, num_runs)
-        r2_data.append(r2)
-        rmse_data.append(rmse)
         lengths.append(seq_length)
-    
-    return np.array(r2_data), np.array(rmse_data), np.array(lengths)
+        # Call the remote function
+        future = test_single_length_remote.remote(sequence_data, target_data, entropy, seq_length, split_fraction, num_runs)
+        futures.append(future)
+
+    # Gather results from all futures
+    results = ray.get(futures)
+
+    # Unpack results into separate arrays
+    r2_data = np.array([result[0] for result in results])
+    rmse_data = np.array([result[1] for result in results])
+
+    return r2_data, rmse_data, np.array(lengths)
 
 def evaluate(seq_length, sequence_data, target_data, entropy, split_fraction, num_runs):
     global evaluation_count
@@ -454,50 +494,95 @@ def plot_convex_hull_section(x, y, direction):
 
 def plot_results(r2_data, rmse_data, lengths, max_seq_length, entropy_save_path):
     os.makedirs(entropy_save_path, exist_ok=True)
-
-    # Plot R2
+    
+    # Plot full R2
     plt.figure(figsize=(10, 6))
     plt.scatter(lengths, r2_data, label='R2', color='black')
     plt.xlabel('Sequence Length', fontsize=24)
     plt.ylabel('R2', fontsize=24)
-    #plt.title('R2 vs Sequence Length', fontsize=16)
     plt.xticks([np.floor(min(lengths)), np.ceil(max(lengths))], fontsize=20)
-    plt.ylim([0,1])
+    plt.ylim([0, 1])
     plt.yticks([0, 1], fontsize=20)
-    plt.ylim([0,1])
-
+    
     # Draw upper convex hull for R2
     plot_convex_hull_section(lengths, r2_data, direction='maximize')
     
-    # Save the R2 plot
+    # Save the full R2 plot
     r2_plot_path = os.path.join(entropy_save_path, 'R2_vs_Sequence_Length.png')
     plt.tight_layout()
     plt.savefig(r2_plot_path)
     plt.close()
 
-    # Plot RMSE
+    # Plot full RMSE
     plt.figure(figsize=(10, 6))
     plt.scatter(lengths, rmse_data, label='RMSE', color='black')
     plt.xlabel('Sequence Length', fontsize=24)
     plt.ylabel('RMSE', fontsize=24)
-    #plt.title('RMSE vs Sequence Length', fontsize=16)
     plt.xticks([np.floor(min(lengths)), np.ceil(max(lengths))], fontsize=20)
     try:
-        plt.ylim([0,np.ceil(max(rmse_data))])
+        plt.ylim([0, np.ceil(max(rmse_data))])
         plt.yticks([0, np.ceil(max(rmse_data))], fontsize=20)
     except:
-        plt.ylim([0,np.ceil(rmse_data[0])])
+        plt.ylim([0, np.ceil(rmse_data[0])])
         plt.yticks([0, np.ceil(rmse_data[0])], fontsize=20)
 
     # Draw lower convex hull for RMSE
     plot_convex_hull_section(lengths, rmse_data, direction='minimize')
     
-    # Save the RMSE plot
+    # Save the full RMSE plot
     rmse_plot_path = os.path.join(entropy_save_path, 'RMSE_vs_Sequence_Length.png')
     plt.tight_layout()
     plt.savefig(rmse_plot_path)
     plt.close()
 
+    ### First 10% plots ###
+
+    # Calculate the range corresponding to the first 10% of the sequence lengths
+    ten_percent_index = int(0.1 * len(lengths))
+    lengths_10 = lengths[:ten_percent_index]
+    r2_data_10 = r2_data[:ten_percent_index]
+    rmse_data_10 = rmse_data[:ten_percent_index]
+
+    # Plot R2 for the first 10% of sequence lengths
+    plt.figure(figsize=(10, 6))
+    plt.scatter(lengths_10, r2_data_10, label='R2', color='black')
+    plt.xlabel('Sequence Length (First 10%)', fontsize=24)
+    plt.ylabel('R2', fontsize=24)
+    plt.xticks([np.floor(min(lengths_10)), np.ceil(max(lengths_10))], fontsize=20)
+    plt.ylim([0, 1])
+    plt.yticks([0, 1], fontsize=20)
+    
+    # Draw upper convex hull for R2 (first 10%)
+    plot_convex_hull_section(lengths_10, r2_data_10, direction='maximize')
+    
+    # Save the R2 plot (first 10%)
+    r2_plot_10_path = os.path.join(entropy_save_path, 'R2_vs_Sequence_Length_10_percent.png')
+    plt.tight_layout()
+    plt.savefig(r2_plot_10_path)
+    plt.close()
+
+    # Plot RMSE for the first 10% of sequence lengths
+    plt.figure(figsize=(10, 6))
+    plt.scatter(lengths_10, rmse_data_10, label='RMSE', color='black')
+    plt.xlabel('Sequence Length (First 10%)', fontsize=24)
+    plt.ylabel('RMSE', fontsize=24)
+    plt.xticks([np.floor(min(lengths_10)), np.ceil(max(lengths_10))], fontsize=20)
+    try:
+        plt.ylim([0, np.ceil(max(rmse_data_10))])
+        plt.yticks([0, np.ceil(max(rmse_data_10))], fontsize=20)
+    except:
+        plt.ylim([0, np.ceil(rmse_data_10[0])])
+        plt.yticks([0, np.ceil(rmse_data_10[0])], fontsize=20)
+
+    # Draw lower convex hull for RMSE (first 10%)
+    plot_convex_hull_section(lengths_10, rmse_data_10, direction='minimize')
+    
+    # Save the RMSE plot (first 10%)
+    rmse_plot_10_path = os.path.join(entropy_save_path, 'RMSE_vs_Sequence_Length_10_percent.png')
+    plt.tight_layout()
+    plt.savefig(rmse_plot_10_path)
+    plt.close()
+    
 def linear_interpolate_non_negative(x, y):
     new_x = np.arange(x[0], x[-1] + 1, 1)
     new_y = np.interp(new_x, x, y)
@@ -602,8 +687,6 @@ def search_sequence_lengths(save_folder,
         metric = eval_metric(metric)
 
         metrics.append(metric)
-    #if len(entropy_data)>1:
-    #    new_entropies.append(np.mean(new_entropies,axis=0))
 
     with open(f'{save_folder}/new_entropies.pkl', 'wb') as f:
         pickle.dump(new_entropies,f)

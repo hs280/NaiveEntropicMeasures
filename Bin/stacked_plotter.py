@@ -179,24 +179,82 @@ def normalized_crosscorrelation_with_pulses(lists_of_lists, indices):
     results = []
     
     for sublist in lists_of_lists:
-        # Normalize the sublist to be between 0 and 1
+        
         min_val = np.min(sublist)
         max_val = np.max(sublist)
-        
-        normalized_sublist = (sublist - min_val) / (max_val - min_val)
-        
-        # Get the values at specified indices from the normalized sublist
-        values_at_indices = normalized_sublist[indices]
-        
-        # Sum of values at specified indices
-        sum_at_indices = np.sum(values_at_indices)
+
+        sublist = (sublist - min_val) / (max_val - min_val)
+
+        test = sublist*0
+        test[indices] = 1
         
         # Calculate the normalized value
-        normalized_value = sum_at_indices/np.sum(normalized_sublist)
+        normalized_value = pulse_distance(sublist,indices)
+        offset_factor = min_adjacent_swaps(sublist,indices)
         
-        results.append(normalized_value)
+        
+        results.append(normalized_value*(1-offset_factor))
     
     return results
+
+def min_adjacent_swaps(nums, gt_indices):
+    # Step 1: Get the n highest values from nums and their corresponding binary form
+    n = len(gt_indices)  # Number of highest values
+    length = len(nums)
+    max_swaps = n*(length-n)
+
+    # if max_swaps==0:
+    #     print('')
+    
+    # Step 2: Sort nums and get the indices of the n highest values
+    sorted_indices = sorted(range(length), key=lambda i: nums[i], reverse=True)[:n]
+
+    # Step 3: Sort both `sorted_indices` and `gt_indices` for a one-to-one matching
+    sorted_indices.sort()
+    gt_indices.sort()
+
+    # Step 4: Count the number of swaps needed to move each element in sorted_indices
+    # to match the corresponding position in gt_indices
+    def count_inversions(arr1, arr2):
+        swaps = 0
+        for i in range(n):
+            # Check how far each element in sorted_indices (arr1) is from gt_indices (arr2)
+            swaps += abs(arr1[i] - arr2[i])
+        return swaps
+
+    return count_inversions(sorted_indices, gt_indices)/max_swaps
+
+def pulse_distance(x,indices):
+    x_2 = x/np.sum(x)
+    return np.sum(x_2[indices])
+
+def cosine_distance(x, y):
+    numerator = np.dot(x, y)
+    denominator = np.sqrt(np.dot(x, x)) * np.sqrt(np.dot(y, y))
+    cosine_similarity = numerator / denominator if denominator != 0 else 0
+    # Cosine Distance between 0 and 1
+    return 1 - cosine_similarity
+
+
+def normalized_cross_correlation(x, y):
+    # Subtract mean from signals
+    x_mean = np.mean(x)
+    y_mean = np.mean(y)
+    
+    # Numerator of NCC
+    numerator = np.sum((x - x_mean) * (y - y_mean))
+    
+    # Denominator of NCC
+    denominator = np.sqrt(np.sum((x - x_mean)**2) * np.sum((y - y_mean)**2))
+    
+    # Return normalized cross-correlation
+    return numerator / denominator if denominator != 0 else 0
+
+def ncc_distance(x, y):
+    ncc = normalized_cross_correlation(x, y)
+    # Convert NCC to a distance measure between 0 and 1
+    distance = 1 - (ncc + 1) / 2
+    return distance
 
 def plot_minimal_bars(data, key_residues, legends, output_filename='minimal_bars_plot.png'):
     """

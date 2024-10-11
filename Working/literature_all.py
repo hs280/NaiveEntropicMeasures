@@ -109,17 +109,17 @@ Protein_Families = ['Alkane \n Monoxygenase',
                'Fluorescent Proteins'
                ]
 
-Bin.plot_stacked_lines(Full_data_existing, labels, legends_existing, key_residues,output_filename='lit_existing_stacked.png',Protein_Families=Protein_Families)
-Bin.plot_stacked_lines(Full_data_naive, labels, legends_naive, key_residues,output_filename='lit_stacked_naive.png',Protein_Families=Protein_Families)
+# Bin.plot_stacked_lines(Full_data_existing, labels, legends_existing, key_residues,output_filename='lit_existing_stacked.png',Protein_Families=Protein_Families)
+# Bin.plot_stacked_lines(Full_data_naive, labels, legends_naive, key_residues,output_filename='lit_stacked_naive.png',Protein_Families=Protein_Families)
 
 min_ratio_dict_existing = Bin.plot_minimal_bars(Full_data_existing, key_residues, legends_existing,output_filename='lit_existing_bar.png')
 min_ratio_dict_naive = Bin.plot_minimal_bars(Full_data_naive, key_residues, legends_naive,output_filename='lit_existing_bar.png')
 
-Bin.plot_bar_chart_with_error_bars(min_ratio_dict_existing, min_ratio_dict_naive,labels = ['dict1','dict2'],ylabel='Accuracy',
-                                   yticks=[ 0.001,0.01,0.1, 1], ylim=(0.001, 1.1), 
-                                   yticklabels=[ '1E-1','1E-2','1E-1','1'],rotation=90,
+Bin.plot_bar_chart_with_error_bars(min_ratio_dict_existing, min_ratio_dict_naive,labels = ['dict1','dict2'],ylabel='Coherence',
+                                   yticks=[0.001,1], ylim=(0.01, 1.1), 
+                                   yticklabels=['1E-3','1'],rotation=90,
                                    figsize=(4/3*11.69, 11.69),
-                                   figsize_cross_corr = (4/3*11.69,4/3*11.69))
+                                   figsize_cross_corr = (4/3*11.69,4/3*11.69),outfolder='figures',is_log=True)
 
 
 

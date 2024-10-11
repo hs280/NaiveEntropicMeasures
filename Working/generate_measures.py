@@ -64,9 +64,8 @@ for i in range(len(MSA_list)):
     entropies_paths.append(entropies_data)
     inormation_data_paths.append(information_data)
 
-    #Bin.plot_residue_probability_heatmap(aligned_residues_df,column_name='Sequence',save_folder=outfile)
-    #Bin.plot_conservation_and_gap_proportion(aligned_residues_df,column_name='Sequence',save_folder=outfile)
-    #Bin.remake_plots(entropies_data,information_data,cross_correl_data,save_folder=outfile,Protein_Family = Protein_Families[i])
+    Bin.plot_residue_probability_heatmap(aligned_residues_df,column_name='Sequence',save_folder=outfile)
+    Bin.remake_plots(entropies_data,information_data,cross_correl_data,save_folder=outfile,Protein_Family = Protein_Families[i])
 
 entropies_dict = Bin.process_list_autocorrelation(entropies_paths, ['Entropy','Theil Entropy','Cramer Entropy'],Store_paths)
 information_dict = Bin.process_list_autocorrelation(inormation_data_paths, ['MI','Theil MI','Cramer MI'],Store_paths)

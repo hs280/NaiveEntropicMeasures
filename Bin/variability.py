@@ -147,7 +147,7 @@ def periodic_autocorrelation(signal,outfile,key):
 
 def plot_bar_chart_with_error_bars(dict1, dict2, labels=['dict1', 'dict2'], ylabel='Noise Proportion',
                                    yticks=[0.01, 0.1, 1], ylim=(0.01, 1.1), yticklabels=['1E-2', '1E-1', '1'],
-                                   rotation=0,figsize=(11.69/1.5, 11.69/1.5),figsize_cross_corr=(11.69/1.5, 11.69/1.5),outfolder=None):
+                                   rotation=0,figsize=(11.69/1.5, 11.69/1.5),figsize_cross_corr=(11.69/1.5, 11.69/1.5),outfolder=None, is_log=True):
     keys1 = list(dict1.keys())
     keys2 = list(dict2.keys())
     all_keys = keys1 + keys2
@@ -204,7 +204,8 @@ def plot_bar_chart_with_error_bars(dict1, dict2, labels=['dict1', 'dict2'], ylab
 
     # Set y-axis limits and ticks
     ax.set_ylim(ylim)
-    ax.set_yscale('log')
+    if is_log:
+        ax.set_yscale('log')
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels, fontsize=20, rotation=0)
 

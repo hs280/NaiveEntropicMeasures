@@ -130,6 +130,13 @@ data_FP_QY,_ = Bin.naive_loader(FP_focus_aligned,FP_focus,'./Results/GFP_QY')
 Full_data = [data_amo,data_gr,data_FP_fluor,data_FP_emission,data_FP_QY]
 legends = ['Ent','Theil Ent','Cramer Ent','MI','Theil MI','Cramer MI']
 
+
+import ray
+
+# Initialize Ray
+ray.init()
+
+
 amo_result = process_data_based(amo_seq_data,amo_target_data,data_amo,save_path_amo,legends)#
 print('done')
 gr_result = process_data_based(gr_seq_data,gr_target_data,data_gr,save_path_gr,legends)
@@ -140,3 +147,5 @@ FP_result = process_data_based(FP_seq_data,FP_emission_target_data,data_FP_fluor
 print('done')
 FP_result = process_data_based(FP_seq_data,FP_QY_target_data,data_FP_fluor,save_path_FP_QY,legends)
 print('done')
+
+ray.shutdown()

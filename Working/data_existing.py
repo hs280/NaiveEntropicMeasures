@@ -9,6 +9,7 @@ directory_folder = str(Path(curent_path).parents[0])
 sys.path.insert(0, directory_folder)
 import Bin as Bin
 import csv
+import ray 
 
 def save_dict_to_csv(data_dict, output_path):
     with open(output_path, 'w', newline='') as csvfile:
@@ -50,6 +51,9 @@ def process_data_based(seq_data_path,target_data_path,rank_data,save_path,file_n
     save_dict_to_csv(resultr, f'{save_path}/merit_values.csv')
 
     return resultr
+
+
+ray.init()
 
 # data paths alk mono_oxygenase
 amo_focus = 'MKFGLFFLNFMNSKRSSDQVIEEMLDTAHYVDQLKFDTLAVYENHFSNNGVVGAPLTVAGFLLGMTKNAKVASLNHVITTHHPVRVAEEACLLDQMSEGRFAFGFSDCEKSADMRFFNRPTDSQFQLFSECHKIINDAFTTGYCHPNNDFYSFPKISVNPHAFTEGGPAQFVNATSKEVVEWAAKLGLPLVFRWDDSNAQRKEYAGLYHEVAQAHGVDVSQVRHKLTLLVNQNVDGEAARAEARVYLEEFVRESYSNTDFEQKMGELLSENAIGTYEESTQAARVAIECCGAADLLMSFESMEDKAQQRAVIDVVNANIVKYHS'
@@ -172,11 +176,40 @@ data_FP,_ = Bin.main_loader(FP_focus_aligned,FP_focus,deep_FP,plmc_FP,hotspot_FP
 Full_data = [data_amo,data_gr,data_FP]
 legends = ['HotspotWizard', 'EV+', 'EV-', 'Deep+', 'Deep-', 'Abs(Deep)']
 
-#amo_result = process_data_based(amo_seq_data,amo_target_data,data_amo,save_path_amo,legends)
-#gr_result = process_data_based(gr_seq_data,gr_target_data,data_gr,save_path_gr,legends)
-#FP_result = process_data_based(FP_seq_data,FP_target_data,data_FP,save_path_FP_fluor,legends)
-FP_emission = process_data_based(FP_seq_data,FP_emission_target_data,data_FP,save_path_FP_emission,legends)
-FP_qy = process_data_based(FP_seq_data,FP_QY_target_data,data_FP,save_path_FP_QY,legends)
+
+import time
+
+# Timing for amo_result
+start_time = time.time()
+amo_result = process_data_based(amo_seq_data, amo_target_data, data_amo, save_path_amo, legends)
+end_time = time.time()
+print(f"Time taken for amo_result: {end_time - start_time:.4f} seconds")
+
+# Timing for gr_result
+start_time = time.time()
+gr_result = process_data_based(gr_seq_data, gr_target_data, data_gr, save_path_gr, legends)
+end_time = time.time()
+print(f"Time taken for gr_result: {end_time - start_time:.4f} seconds")
+
+# Timing for FP_result
+start_time = time.time()
+FP_result = process_data_based(FP_seq_data, FP_target_data, data_FP, save_path_FP_fluor, legends)
+end_time = time.time()
+print(f"Time taken for FP_result: {end_time - start_time:.4f} seconds")
+
+# Timing for FP_emission
+start_time = time.time()
+FP_emission = process_data_based(FP_seq_data, FP_emission_target_data, data_FP, save_path_FP_emission, legends)
+end_time = time.time()
+print(f"Time taken for FP_emission: {end_time - start_time:.4f} seconds")
+
+# Timing for FP_qy
+start_time = time.time()
+FP_qy = process_data_based(FP_seq_data, FP_QY_target_data, data_FP, save_path_FP_QY, legends)
+end_time = time.time()
+print(f"Time taken for FP_qy: {end_time - start_time:.4f} seconds")
 
 
 
+
+ray.shutdown()
