@@ -153,7 +153,7 @@ def plot_surfaces(directory_path, num_cycles, names, save_path):
 
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    plt.savefig(os.path.join(save_path, 'heatmap_plot.png'), dpi=600, bbox_inches='tight')
+    plt.savefig(os.path.join(save_path, dpi=600), dpi=600, bbox_inches='tight')
 
     # Plot R2 vs Length for each cycle
     for name in names:
@@ -172,7 +172,7 @@ def plot_surfaces(directory_path, num_cycles, names, save_path):
         plt.grid(visible=True, color='gray', linestyle='--', linewidth=0.5)
         plt.xscale('log')
         plt.tight_layout()
-        plt.savefig(os.path.join(save_path, f'R2_vs_Length_{name}.png'), dpi=600)
+        plt.savefig(os.path.join(save_path, dpi=600), dpi=600)
 
 
     # Plot sum(1-R2) vs Cycle number for each name
@@ -186,7 +186,7 @@ def plot_surfaces(directory_path, num_cycles, names, save_path):
         plt.ylabel('Sum of (1-R2)', fontsize=12)
         plt.grid(visible=True, color='gray', linestyle='--', linewidth=0.5)
         plt.tight_layout()
-        plt.savefig(os.path.join(save_path, f'Sum_1_minus_R2_vs_Cycle_{name}.png'), dpi=600)
+        plt.savefig(os.path.join(save_path, dpi=600), dpi=600)
 
 def r2_rmse_against_mean(data):
     # Calculate the mean of the data
@@ -510,7 +510,7 @@ def plot_results(r2_data, rmse_data, lengths, max_seq_length, entropy_save_path)
     # Save the full R2 plot
     r2_plot_path = os.path.join(entropy_save_path, 'R2_vs_Sequence_Length.png')
     plt.tight_layout()
-    plt.savefig(r2_plot_path)
+    plt.savefig(r2_plot_path, dpi=600)
     plt.close()
 
     # Plot full RMSE
@@ -532,7 +532,7 @@ def plot_results(r2_data, rmse_data, lengths, max_seq_length, entropy_save_path)
     # Save the full RMSE plot
     rmse_plot_path = os.path.join(entropy_save_path, 'RMSE_vs_Sequence_Length.png')
     plt.tight_layout()
-    plt.savefig(rmse_plot_path)
+    plt.savefig(rmse_plot_path, dpi=600)
     plt.close()
 
     ### First 10% plots ###
@@ -558,7 +558,7 @@ def plot_results(r2_data, rmse_data, lengths, max_seq_length, entropy_save_path)
     # Save the R2 plot (first 10%)
     r2_plot_10_path = os.path.join(entropy_save_path, 'R2_vs_Sequence_Length_10_percent.png')
     plt.tight_layout()
-    plt.savefig(r2_plot_10_path)
+    plt.savefig(r2_plot_10_path, dpi=600)
     plt.close()
 
     # Plot RMSE for the first 10% of sequence lengths
@@ -580,7 +580,7 @@ def plot_results(r2_data, rmse_data, lengths, max_seq_length, entropy_save_path)
     # Save the RMSE plot (first 10%)
     rmse_plot_10_path = os.path.join(entropy_save_path, 'RMSE_vs_Sequence_Length_10_percent.png')
     plt.tight_layout()
-    plt.savefig(rmse_plot_10_path)
+    plt.savefig(rmse_plot_10_path, dpi=600)
     plt.close()
     
 def linear_interpolate_non_negative(x, y):

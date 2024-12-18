@@ -97,8 +97,8 @@ def plot_stacked_lines(data, labels, legends, vertical_lines, min_distance=1, ou
         line.set_linewidth(5)  # Set thicker line width for legend lines
 
 
-    plt.savefig(output_filename, dpi=300)
-    plt.show()
+    plt.savefig(output_filename, dpi=600)
+    #plt.show()
 
 
 
@@ -154,7 +154,7 @@ def plot_optimal_bars(data, key_residues, legends, output_filename='optimal_bars
     fig.legend(loc='upper center', bbox_to_anchor=(0.5, 0.2), frameon=False, ncol=num_lines, fontsize=14)
 
     plt.tight_layout(rect=[0, 0.15, 1, 1])
-    plt.savefig(output_filename, dpi=300)
+    plt.savefig(output_filename, dpi=600)
     plt.show()
 
 def calculate_minimal_values(data, key_residues):
@@ -298,7 +298,7 @@ def plot_minimal_bars(data, key_residues, legends, output_filename='minimal_bars
     # fig.legend(loc='upper center', bbox_to_anchor=(0.5, 0.2), frameon=False, ncol=num_lines, fontsize=14)
 
     # plt.tight_layout(rect=[0, 0.15, 1, 1])
-    # plt.savefig(output_filename, dpi=300)
+    # plt.savefig(output_filename, dpi=600)
     # plt.show()
 
     return min_ratio_dict

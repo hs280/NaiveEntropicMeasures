@@ -10,7 +10,7 @@ import Bin as Bin
 
 
 # Rhodopsins
-rhodopsins_indices = [52, 80, 84, 119, 121, 122, 125, 126, 129, 158, 159, 162, 178, 181, 182, 185, 222, 225, 226, 229, 249, 253, 256, 257]
+rhodopsins_indices = [52,80,84,119,121,122,125,126,129,158,159,162,178,181,182,185,222,225,226,229,249,253,256,257]
 
 # GFP and Variants
 gfp_indices = [68, 69, 70, 97, 145, 147, 150, 199, 201, 219]
@@ -47,7 +47,7 @@ amo_key_indices = list((np.asarray(alkanol_monooxygenases_indices)-1)) #0 inexin
 
 
 ## GR
-gr_focus = 'MLMTVFSSAPELALLGSTFAQVDPSNLSVSDSLTYGQFNLVYNAFSFAIAAMFASALFFFSAQALVGQRYRLALLVSAIVVSIAGYHYFRIFNSWDAAYVLENGVYSLTSEKFNDAYRYVEWLLTVPLLLVETVAVLTLPAKEARPLLIKLTVASVLMIATLYPGWISDDITTRIIWGTVSTIPFAYILYVLWVELSRSLVRQPAAVQTLVRNMRWLLLLSWGVYPIAYLLPMLGVSGTSAAVGVQVGYTIADVLSKPVFGLLVFAIALVKTKADQESSEPHAAIGAAANKSGGSLI'
+gr_focus = 'MLMTVFSSAPELALLGSTFAQVDPSNLSVSDSLTYGQFNLVYNAFSFAIAAMFASALFFFSAQALVGQRYRLALLVSAIVVSIAGYHYFRIFNSWDAAYVLENGVYSLTSEKFNDAYRYVDWLLTVPLLLVETVAVLTLPAKEARPLLIKLTVASVLMIATGYPGEISDDITTRIIWGTVSTIPFAYILYVLWVELSRSLVRQPAAVQTLVRNMRWLLLLSWGVYPIAYLLPMLGVSGTSAAVGVQVGYTIADVLAKPVFGLLVFAIALVKTKADQESSEPHAAIGAAANKSGGSLIS'
 gr_focus_aligned = '------------------------------------------------------------\
 -----------------MLMT---VFSSAPELAL--LGSTFAQVDP---SN-LSVSDSLT\
 --YGQFNLVYNAFS-FAIAAMFASALFFFSAQALVGQRYRLALLVSAI--VVSIAGYHYF\
@@ -85,13 +85,29 @@ _,data_amo_existing = Bin.main_loader(amo_focus_aligned,amo_focus,deep_amo,plmc_
 _,data_gr_existing = Bin.main_loader(gr_focus_aligned,gr_focus,deep_gr,plmc_gr,hotspot_gr)
 _,data_FP_existing = Bin.main_loader(FP_focus_aligned,FP_focus,deep_FP,plmc_FP,hotspot_FP)
 
+def extract_top_indices_and_chars(float_list, number_list, char_string):
+    # Step 1: Get the indices of the top M largest elements from float_list
+    top_indices = sorted(range(len(float_list)), key=lambda i: float_list[i], reverse=True)[:len(number_list)]
+
+    # Step 2: For each index in top_indices, get the corresponding character from char_string
+    result = [(index, char_string[index]) for index in sorted(top_indices)]
+
+    # Step 3: Return the formatted result as a list of strings
+    return print([f"{char}{index+1}" for index, char in result])
 
 ## load_data 
 _,data_amo_naive = Bin.naive_loader(amo_focus_aligned,amo_focus,'./Results/AlkMonoxygenase')
 _,data_gr_naive = Bin.naive_loader(gr_focus_aligned,gr_focus,'./Results/BacRhod')
 _,data_FP_naive = Bin.naive_loader(FP_focus_aligned,FP_focus,'./Results/GFP_fluor')
 
+print('amo')
+extract_top_indices_and_chars(data_amo_naive[-1],amo_key_indices,amo_focus)
 
+print('gr')
+extract_top_indices_and_chars(data_gr_naive[-1],gr_key_indices,gr_focus)
+
+print('FP')
+extract_top_indices_and_chars(data_FP_naive[-1],FP_key_indices,FP_focus)
 
 Full_data_existing = [data_amo_existing,data_gr_existing,data_FP_existing]
 
@@ -109,8 +125,8 @@ Protein_Families = ['Alkane \n Monoxygenase',
                'Fluorescent Proteins'
                ]
 
-# Bin.plot_stacked_lines(Full_data_existing, labels, legends_existing, key_residues,output_filename='lit_existing_stacked.png',Protein_Families=Protein_Families)
-# Bin.plot_stacked_lines(Full_data_naive, labels, legends_naive, key_residues,output_filename='lit_stacked_naive.png',Protein_Families=Protein_Families)
+Bin.plot_stacked_lines(Full_data_existing, labels, legends_existing, key_residues,output_filename='lit_existing_stacked.png',Protein_Families=Protein_Families)
+Bin.plot_stacked_lines(Full_data_naive, labels, legends_naive, key_residues,output_filename='lit_stacked_naive.png',Protein_Families=Protein_Families)
 
 min_ratio_dict_existing = Bin.plot_minimal_bars(Full_data_existing, key_residues, legends_existing,output_filename='lit_existing_bar.png')
 min_ratio_dict_naive = Bin.plot_minimal_bars(Full_data_naive, key_residues, legends_naive,output_filename='lit_existing_bar.png')

@@ -137,15 +137,15 @@ import ray
 ray.init()
 
 
-amo_result = process_data_based(amo_seq_data,amo_target_data,data_amo,save_path_amo,legends)#
-print('done')
-gr_result = process_data_based(gr_seq_data,gr_target_data,data_gr,save_path_gr,legends)
-print('done')
+#amo_result = process_data_based(amo_seq_data,amo_target_data,data_amo,save_path_amo,legends)#
+#print('done')
+#gr_result = process_data_based(gr_seq_data,gr_target_data,data_gr,save_path_gr,legends)
+#print('done')
 FP_result = process_data_based(FP_seq_data,FP_fluor_target_data,data_FP_fluor,save_path_FP_fluor,legends)
 print('done')
-FP_result = process_data_based(FP_seq_data,FP_emission_target_data,data_FP_fluor,save_path_FP_emission,legends)
-print('done')
-FP_result = process_data_based(FP_seq_data,FP_QY_target_data,data_FP_fluor,save_path_FP_QY,legends)
-print('done')
+#FP_result = process_data_based(FP_seq_data,FP_emission_target_data,data_FP_fluor,save_path_FP_emission,legends)
+#print('done')
+#FP_result = process_data_based(FP_seq_data,FP_QY_target_data,data_FP_fluor,save_path_FP_QY,legends)
+#print('done')
 
 ray.shutdown()

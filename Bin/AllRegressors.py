@@ -297,7 +297,7 @@ def plot_results(X_train, y_train, y_train_predicted, X_test, y_test, y_test_pre
 
     save_dir = os.path.join(save_path, f'{model_name}_predictions.png')
     os.makedirs(save_path, exist_ok=True)
-    plt.savefig(save_dir)
+    plt.savefig(save_dir, dpi=600)
     plt.close()
 
 
@@ -315,7 +315,7 @@ def plot_results(X_train, y_train, y_train_predicted, X_test, y_test, y_test_pre
     plt.plot(x, p, 'k', linewidth=2)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join(save_path, model_name+'Residual_Hist.png'))
+    plt.savefig(os.path.join(save_path, dpi=600))
     plt.close()
 
 def Ensemble_Modeller(X_data, y_data, model_name,X_full_val = None,Y_full_val=None, num_folds=10, num_trials=0):

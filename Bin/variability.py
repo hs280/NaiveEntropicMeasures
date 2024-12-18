@@ -139,7 +139,7 @@ def periodic_autocorrelation(signal,outfile,key):
     plt.ylabel('Autocorrelation')
     plt.grid(True)
     if outfile !=None:
-        plt.savefig(f'{outfile}/autocorrelation_{key}',dpi=600)
+        plt.savefig(f'{outfile}/autocorrelation_{key}', dpi=600)
 
     plt.close()
 
@@ -212,7 +212,7 @@ def plot_bar_chart_with_error_bars(dict1, dict2, labels=['dict1', 'dict2'], ylab
 
     # Show plot
     plt.tight_layout()
-    plt.savefig(f'{outfolder}/bar_chart{y_label_stripped}.png',dpi=600)
+    plt.savefig(f'{outfolder}/bar_chart{y_label_stripped}.png', dpi=600)
 
     _,hedge_df = generate_comparison_table(dict1, dict2)
 
@@ -443,7 +443,7 @@ def plot_colormap_cross_corr(matrix, labels,cbar_label=[],vrange=(0,1),vticks=[0
     plt.tight_layout()
 
     if save_path:
-        plt.savefig(save_path,dpi=600)
+        plt.savefig(save_path, dpi=600)
         plt.close()
     else:
         plt.show()
@@ -712,7 +712,7 @@ def plot_mi_per_position(mi_scores, save_folder=None):
     plt.tight_layout()  # Adjust layout to prevent clipping of labels
     
     if save_folder is not None:
-        plt.savefig(os.path.join(save_folder, 'mutual_information_plot.png'))
+        plt.savefig(os.path.join(save_folder, dpi=600))
     else:
         plt.show()
 
@@ -759,7 +759,7 @@ def plot_entropy(entropy,save_folder=None):
     plt.tight_layout()  # Adjust layout to prevent clipping of labels
     
     if save_folder != None:
-        plt.savefig(os.path.join(save_folder, 'entropy_plot.png'),dpi=600)
+        plt.savefig(os.path.join(save_folder, dpi=600), dpi=600)
     else:
         plt.show()
 
@@ -882,7 +882,7 @@ def plot_heatmap(matrix, x_label='Predictor Location', y_label='Target Location'
     plt.tight_layout()
 
     if save_folder is not None:
-        plt.savefig(os.path.join(save_folder, name), dpi=600)
+        plt.savefig(os.path.join(save_folder, dpi=600), dpi=600)
     else:
         plt.show()
 
@@ -908,7 +908,7 @@ def plot_heatmap(matrix, x_label='Predictor Location', y_label='Target Location'
 
     if save_folder is not None:
         sum_plot_name = 'sum_' + name
-        plt.savefig(os.path.join(save_folder, sum_plot_name), dpi=600)
+        plt.savefig(os.path.join(save_folder, dpi=600), dpi=600)
     else:
         plt.show()
 
@@ -995,7 +995,7 @@ def plot_residue_probability_heatmap(df, column_name='amino_acid_sequence', save
     if save_folder is None:
         plt.show()
     else:
-        plt.savefig(os.path.join(save_folder, 'residue_probability_heatmap.png'), dpi=600)
+        plt.savefig(os.path.join(save_folder, dpi=600), dpi=600)
 
     plt.close()
 
@@ -1051,7 +1051,7 @@ def plot_residue_probability_heatmap(df, column_name='amino_acid_sequence', save
 #     if save_folder is None:
 #         plt.show()
 #     else:
-#         plt.savefig(os.path.join(save_folder, 'residue_probability_heatmap.png'),dpi=600)
+#         plt.savefig(os.path.join(save_folder, dpi=600), dpi=600)
 
 #     plt.close()
 
@@ -1107,7 +1107,7 @@ def plot_residue_probability_heatmap(df, column_name='amino_acid_sequence', save
 #     if save_folder is None:
 #         plt.show()
 #     else:
-#         plt.savefig(os.path.join(save_folder, 'conservation_and_gap_proportion.png'), dpi=600)
+#         plt.savefig(os.path.join(save_folder, dpi=600), dpi=600)
 
 #     plt.close()
 
@@ -1162,7 +1162,7 @@ def plot_normalized_cumsum(data,save_folder = None):
     if save_folder==None:
         plt.show()
     else:
-        plt.savefig(os.path.join(save_folder, 'residue_entropy_cumsum.png'),dpi=600)
+        plt.savefig(os.path.join(save_folder, dpi=600), dpi=600)
 
 def process_vectors(e, X):
     # Create copies of e and initialize k
@@ -1275,7 +1275,7 @@ def plot_entropy_multipanel(entropy_lists, y_labels=[], save_folder=None,fig_nam
     if save_folder is not None:
         if not os.path.exists(save_folder):
             os.makedirs(save_folder)
-        plt.savefig(os.path.join(save_folder,fig_name),dpi=1200)
+        plt.savefig(os.path.join(save_folder, dpi=600), dpi=600)
     else:
         plt.show()
 
@@ -1314,7 +1314,7 @@ def plot_colormap_rnyttopy_mp(entropy_lists, y_labels, save_folder=None, fig_nam
     if save_folder is not None:
         if not os.path.exists(save_folder):
             os.makedirs(save_folder)
-        plt.savefig(os.path.join(save_folder, fig_name), dpi=1200)
+        plt.savefig(os.path.join(save_folder, dpi=600), dpi=600)
     else:
         plt.show()
 

@@ -314,7 +314,7 @@ def test_dimensionality_reduction_methods(X_data, methods, num_dims_range, save_
         plt.legend()
         plt.tight_layout()
 
-        plt.savefig(os.path.join(save_folder, 'dimensionality_reduction_evaluation.png'))
+        plt.savefig(os.path.join(save_folder, dpi=600))
 
 
     # Return the generated data

@@ -114,7 +114,8 @@ def plot_bar_chart_with_error_bars(dict1, dict2, labels=['dict1', 'dict2'], ylab
 
     # Show plot
     plt.tight_layout()
-    plt.show()
+    #plt.show()
+    plt.savefig('bar_chart_databased_all.png', dpi =600)
 
 
 def calculate_p_value(dict1, dict2):
@@ -236,7 +237,7 @@ def plot_colormap(hedge_df,labels):
 
 
     plt.tight_layout()
-    plt.show()
+    plt.savefig('Hedge_g_databased_al.png', dpi =600)
 
 paths_existing = ['./Results/AlkMonoxygenase/databased','./Results/BacRhod/databased','./Results/GFP_fluor/databased','./Results/GFP_emission/databased','./Results/GFP_QY/databased']
 paths_naive = ['./Results/AlkMonoxygenase/databased_naive','./Results/BacRhod/databased_naive','./Results/GFP_fluor/databased_naive','./Results/GFP_emission/databased_naive','./Results/GFP_QY/databased_naive']
