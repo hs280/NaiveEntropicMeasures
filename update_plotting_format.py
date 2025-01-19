@@ -4,7 +4,7 @@ import re
 def replace_savefig(folder_path):
     """
     Simplify plt.savefig calls in all Python files within a folder
-    by keeping only the filepath and adding dpi=600.
+    by keeping only the filepath and adding dpi=1200.
     """
     for root, _, files in os.walk(folder_path):
         for file in files:
@@ -14,10 +14,10 @@ def replace_savefig(folder_path):
                     content = f.read()
 
                 # Simplify plt.savefig calls
-                # Match plt.savefig(filepath, dpi=600) and replace with plt.savefig(filepath, dpi=600)
+                # Match plt.savefig(filepath, dpi=1200) and replace with plt.savefig(filepath, dpi=1200)
                 content = re.sub(
                     r"(plt\.savefig\s*\(\s*[^,]+).*?\)",
-                    r"\1, dpi=600)",
+                    r"\1, dpi=1200)",
                     content,
                     flags=re.DOTALL
                 )

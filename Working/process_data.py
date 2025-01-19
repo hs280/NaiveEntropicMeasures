@@ -115,7 +115,7 @@ def plot_bar_chart_with_error_bars(dict1, dict2, labels=['dict1', 'dict2'], ylab
     # Show plot
     plt.tight_layout()
     #plt.show()
-    plt.savefig('bar_chart_databased_all.png', dpi =600)
+    plt.savefig('bar_chart_databased_all.png', dpi=1200)
 
 
 def calculate_p_value(dict1, dict2):
@@ -191,6 +191,64 @@ def generate_comparison_table(dict1, dict2):
 
     return result_df, hedge_df
 
+from scipy.stats import t
+
+def ttest_unpaired_from_stats(mean1, std1, n1, mean2, std2, n2):
+    """Calculate p-value for an unpaired t-test given summary statistics."""
+    se1 = std1 / np.sqrt(n1)
+    se2 = std2 / np.sqrt(n2)
+    se_diff = np.sqrt(se1**2 + se2**2)
+    
+    t_stat = (mean1 - mean2) / se_diff
+    df = 8 #((se1**2 + se2**2)**2) / (((se1**2)**2 / (n1 - 1)) + ((se2**2)**2 / (n2 - 1)))
+    
+    p_val = 2 * t.sf(np.abs(t_stat), df)
+    return p_val
+
+def generate_comparison_table_with_pvalues(dict1, dict2, n_trials):
+    all_keys = list(set(list(dict1.keys()) + list(dict2.keys())))
+    data = []
+
+    # Calculate mean and standard deviation for each key
+    stats = {}
+    for key in all_keys:
+        if key in dict1:
+            values = dict1[key]
+        else:
+            values = dict2[key]
+        mean_val = np.mean(values)
+        std_val = np.std(values, ddof=1)
+        stats[key] = (mean_val, std_val, n_trials)
+        data.append([key, mean_val, std_val])
+
+    # Create initial DataFrame
+    df = pd.DataFrame(data, columns=['Key', 'Mean Performance', 'Stdev Performance'])
+
+    # Calculate p-values for each pair of keys
+    pvalue_matrix = np.ones((len(all_keys), len(all_keys)))  # Initialize with 1s (default for diagonal)
+
+    for i, key1 in enumerate(all_keys):
+        for j, key2 in enumerate(all_keys):
+            if i != j:
+                mean1, std1, n1 = stats[key1]
+                mean2, std2, n2 = stats[key2]
+
+                # Perform t-test to compute p-value
+                p_val = ttest_unpaired_from_stats(mean1, std1, n1, mean2, std2, n2)
+
+                # Adjust p-value based on n_trials (Bonferroni correction)
+                corrected_p_val = min(p_val * n_trials, 1.0)  # Ensure p-value is at most 1.0
+                pvalue_matrix[i, j] = p_val
+
+    # Create a DataFrame for the p-value matrix
+    pvalue_df = pd.DataFrame(pvalue_matrix, columns=all_keys, index=all_keys)
+
+    # Concatenate the two DataFrames
+    result_df = pd.concat([df.set_index('Key'), pvalue_df], axis=1)
+
+    return result_df, pvalue_df
+
+
 import matplotlib.colors as mcolors
 
 def plot_colormap(hedge_df,labels):
@@ -237,7 +295,7 @@ def plot_colormap(hedge_df,labels):
 
 
     plt.tight_layout()
-    plt.savefig('Hedge_g_databased_al.png', dpi =600)
+    plt.savefig('Hedge_g_databased_al.png', dpi=1200)
 
 paths_existing = ['./Results/AlkMonoxygenase/databased','./Results/BacRhod/databased','./Results/GFP_fluor/databased','./Results/GFP_emission/databased','./Results/GFP_QY/databased']
 paths_naive = ['./Results/AlkMonoxygenase/databased_naive','./Results/BacRhod/databased_naive','./Results/GFP_fluor/databased_naive','./Results/GFP_emission/databased_naive','./Results/GFP_QY/databased_naive']
@@ -257,6 +315,10 @@ plot_bar_chart_with_error_bars(results_existing,results_naive,labels=['Existing'
 
 result_df, hedge_df = generate_comparison_table(results_existing,results_naive)
 
+p_res_df, p_df = generate_comparison_table_with_pvalues(results_existing,results_naive,5)
+
 plot_colormap(hedge_df,labels=labels)
 
 print(result_df)
+
+print(p_res_df)
