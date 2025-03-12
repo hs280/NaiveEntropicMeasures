@@ -469,36 +469,92 @@ def generate_data(num_sequences=1000, sequence_length=50):
     
     return pd.DataFrame({'Sequence': sequences}), pd.DataFrame({'wavelength': wavelengths})
 
-def calculate_mi_per_position(X_data, y_data):
+import ray 
+
+@ray.remote
+def calc_mi_for_batch(pos_batch, X_data_obj, y_data_obj):
+    # If the passed objects are not ObjectRefs, convert them
+    if not isinstance(X_data_obj, ray.ObjectRef):
+        X_data_obj = ray.put(X_data_obj)
+    if not isinstance(y_data_obj, ray.ObjectRef):
+        y_data_obj = ray.put(y_data_obj)
+    
+    # Retrieve the actual data
+    X_data = ray.get(X_data_obj)
+    y_data = ray.get(y_data_obj)
+    
+    batch_results = []
+    for pos in pos_batch:
+        # Extract the amino acid at the current position from each sequence
+        pos_amino_acids = X_data['Sequence'].apply(lambda seq: seq[pos])
+        
+        entropy_continuous = calculate_entropy_continuous(y_data)
+        entropy_discrete = calculate_entropy_discrete(pos_amino_acids)
+        joint_entropy_mixed = calculate_joint_entropy(
+            y_data, pos_amino_acids, types=('continuous', 'categorical')
+        )
+        
+        mi = (entropy_discrete + entropy_continuous - joint_entropy_mixed) / entropy_continuous
+        batch_results.append((pos, np.mean(mi)))
+    
+    return batch_results
+
+
+import Bin.fast_mi as fmi 
+
+def calculate_mi_per_position(X_data, y_data, parallel_flag=False, batch_size=10):
     """
     Calculate the mutual information between each amino acid position and the wavelength.
 
     Parameters:
-    - X_data: DataFrame containing amino acid sequences.
-    - y_data: DataFrame containing wavelengths.
+    - X_data: DataFrame containing amino acid sequences
+    - y_data: DataFrame containing wavelengths
+    - parallel_flag (bool): If True, use Ray to compute MI scores in parallel. Default is True
+    - batch_size (int): Number of positions to process in each batch when running in parallel. Default is 10
 
     Returns:
-    - mi_scores: List of mutual information scores for each amino acid position.
+    - mi_scores: List of mutual information scores for each amino acid position
     """
     sequence_length = len(X_data['Sequence'][0])
-    mi_scores = []
     
-    # Process each position individually
-    for pos in range(sequence_length):
-        # # Extract the amino acid at the current position from each sequence
-        pos_amino_acids = X_data['Sequence'].apply(lambda seq: seq[pos])
-
+    if parallel_flag:
+        if not ray.is_initialized():
+            ray.init(ignore_reinit_error=True)
+        
+        # Put the large objects into the Ray object store
+        X_data_ref = ray.put(X_data)
+        y_data_ref = ray.put(y_data)
+        
+        # Create batches of positions
+        position_batches = [
+            list(range(i, min(i + batch_size, sequence_length)))
+            for i in range(0, sequence_length, batch_size)
+        ]
+        
+        # Launch remote tasks for each batch
+        futures = [
+            calc_mi_for_batch.remote(batch, X_data_ref, y_data_ref)
+            for batch in position_batches
+        ]
+        
+        # Get results and sort them by position
+        batch_results = ray.get(futures)
+        all_results = [item for sublist in batch_results for item in sublist]
+        all_results.sort(key=lambda x: x[0])  # Sort by position
+        mi_scores = [mi for _, mi in all_results]
+        
+    else:
+        mi_scores = []
         entropy_continuous = calculate_entropy_continuous(y_data)
-        
-        # Example for discrete entropy
-        entropy_discrete = calculate_entropy_discrete(pos_amino_acids)
-        
-        # Example for joint entropy with mixed types
-        joint_entropy_mixed = calculate_joint_entropy(y_data, pos_amino_acids, types=('continuous', 'categorical'))
-
-        mi = (entropy_discrete+entropy_continuous-joint_entropy_mixed)/entropy_continuous
-
-        mi_scores.append(np.mean(mi))  # Averaging MI scores over all amino acids at this position
+        for pos in range(sequence_length):
+            pos_amino_acids = X_data['Sequence'].apply(lambda seq: seq[pos])
+            entropy_discrete = calculate_entropy_discrete(pos_amino_acids)
+            joint_entropy_mixed = fmi.calculate_joint_entropy(
+                y_data, pos_amino_acids, types=('continuous', 'categorical')
+            )
+            joint_entropy_mixed = np.max([joint_entropy_mixed,entropy_discrete,entropy_continuous])
+            mi = (entropy_discrete + entropy_continuous - joint_entropy_mixed) / entropy_continuous
+            mi_scores.append(np.mean(mi))
     
     return mi_scores
 
@@ -555,14 +611,17 @@ def calculate_entropy_discrete(vector):
     
     return entropy_value
 
+import numpy as np
+from scipy.stats import entropy
+
 def calculate_joint_entropy(X, Y, types=('continuous', 'continuous'), num_bins=None):
     """
-    Calculate the joint entropy H(X, Y) of variables X and Y.
+    Calculate the joint entropy H(X, Y) of variables X and Y with optimized performance.
     
     Parameters:
-    X : numpy array or list
+    X : numpy array
         Variable X (continuous or categorical).
-    Y : numpy array or list
+    Y : numpy array
         Variable Y (continuous or categorical).
     types : tuple of str, optional
         Types of X and Y ('continuous' or 'categorical'). Default is ('continuous', 'continuous').
@@ -573,90 +632,57 @@ def calculate_joint_entropy(X, Y, types=('continuous', 'continuous'), num_bins=N
     joint_entropy : float
         Joint entropy H(X, Y).
     """
+    # Convert inputs to numpy arrays if they aren't already
+    X = np.asarray(X)
+    Y = np.asarray(Y)
+    
     assert len(X) == len(Y), "X and Y must have the same length"
     assert len(types) == 2, "types should be a tuple of length 2"
     
-    if types[0] == 'continuous':
-        # Determine number of bins for X
+    # Check for degenerate cases
+    if len(np.unique(X)) == 1 or len(np.unique(Y)) == 1:
+        return 0.0
+
+    def get_bin_edges(data, is_continuous):
+        if not is_continuous:
+            return np.unique(data)
         if num_bins is None:
-            _, bins_X = np.histogram(X, bins='fd')
-            num_bins_X = len(bins_X)
-        else:
-            num_bins_X = num_bins
-            
-        # Compute histogram with specified bins
-        hist_X, _ = np.histogram(X, bins=num_bins_X, density=True)
-        prob_X = hist_X * np.diff(_)
-        
-    elif types[0] == 'categorical':
-        # Compute probabilities directly for X
-        _, counts_X = np.unique(X, return_counts=True)
-        prob_X = counts_X / len(X)
-        
+            return np.histogram_bin_edges(data, bins='fd')
+        return np.histogram_bin_edges(data, bins=num_bins)
+
+    # Pre-compute bin edges and digitized values
+    is_x_continuous = types[0] == 'continuous'
+    is_y_continuous = types[1] == 'continuous'
+    
+    x_edges = get_bin_edges(X, is_x_continuous)
+    y_edges = get_bin_edges(Y, is_y_continuous)
+    
+    if is_x_continuous:
+        x_indices = np.digitize(X, x_edges[:-1])
     else:
-        raise ValueError("Unsupported type for X. Should be 'continuous' or 'categorical'")
-    
-    if types[1] == 'continuous':
-        # Determine number of bins for Y
-        if num_bins is None:
-            _, bins_Y = np.histogram(Y, bins='fd')
-            num_bins_Y = len(bins_Y)
-        else:
-            num_bins_Y = num_bins
-            
-        # Compute histogram with specified bins
-        hist_Y, _ = np.histogram(Y, bins=num_bins_Y, density=True)
-        prob_Y = hist_Y * np.diff(_)
+        x_indices = np.searchsorted(x_edges, X)
         
-    elif types[1] == 'categorical':
-        # Compute probabilities directly for Y
-        _, counts_Y = np.unique(Y, return_counts=True)
-        prob_Y = counts_Y / len(Y)
-        
+    if is_y_continuous:
+        y_indices = np.digitize(Y, y_edges[:-1])
     else:
-        raise ValueError("Unsupported type for Y. Should be 'continuous' or 'categorical'")
+        y_indices = np.searchsorted(y_edges, Y)
+
+    # Calculate joint probabilities using 2D histogram
+    joint_counts = np.zeros((len(x_edges) + (0 if is_x_continuous else -1),
+                           len(y_edges) + (0 if is_y_continuous else -1)))
     
-    # Compute joint probabilities
-    if types == ('continuous', 'continuous'):
-        joint_hist, _, _ = np.histogram2d(X, Y, bins=(num_bins_X, num_bins_Y), density=True)
-        joint_prob = joint_hist.flatten() / np.sum(joint_hist)
-        
-    elif types == ('categorical', 'categorical'):
-        joint_prob = np.zeros((len(prob_X), len(prob_Y)))
-        for i in range(len(X)):
-            joint_prob[np.where(X[i] == np.unique(X))[0][0], np.where(Y[i] == np.unique(Y))[0][0]] += 1
-        joint_prob /= len(X)
-        joint_prob = joint_prob.flatten()
-        
-    elif types == ('continuous', 'categorical'):
-        # Convert continuous X into categorical bins
-        bin_index_X = np.digitize(X, bins_X[:-1])
-        
-        joint_prob = np.zeros(num_bins_X * len(prob_Y))
-        for i in range(len(X)):
-            index = bin_index_X[i] * len(prob_Y) + np.where(Y[i] == np.unique(Y))[0][0]
-            if index < len(joint_prob):
-                joint_prob[index] += 1
-        joint_prob /= len(X)
-        
-    elif types == ('categorical', 'continuous'):
-        # Convert continuous Y into categorical bins
-        bin_index_Y = np.digitize(Y, bins_Y[:-1])
-        
-        joint_prob = np.zeros(len(prob_X) * num_bins_Y)
-        for i in range(len(X)):
-            index = np.where(X[i] == np.unique(X))[0][0] * num_bins_Y + bin_index_Y[i]
-            if index < len(joint_prob):
-                joint_prob[index] += 1
-        joint_prob /= len(X)
-        
-    else:
-        raise ValueError("Unsupported combination of types. Both should be 'continuous' or 'categorical'")
+    # Use numpy's advanced indexing for faster joint probability computation
+    np.add.at(joint_counts, (x_indices - 1, y_indices - 1), 1)
     
-    # Compute joint entropy
-    joint_entropy = entropy_ss(joint_prob)
+    # Normalize to get probabilities
+    joint_prob = joint_counts.flatten() / len(X)
     
-    return joint_entropy
+    # Remove zero probabilities to avoid log(0) issues
+    joint_prob = joint_prob[joint_prob > 0]
+    
+    # Compute entropy using scipy's optimized implementation
+    return entropy_ss(joint_prob, base=np.e)
+
 
 def calculate_mi_per_position_old(X_data, y_data):
     """
@@ -712,7 +738,7 @@ def plot_mi_per_position(mi_scores, save_folder=None):
     plt.tight_layout()  # Adjust layout to prevent clipping of labels
     
     if save_folder is not None:
-        plt.savefig(os.path.join(save_folder, dpi=1200))
+        plt.savefig(os.path.join(save_folder,'normalized_mi_scores.png'), dpi=1200)
     else:
         plt.show()
 
@@ -834,33 +860,59 @@ def normalize_theils_u(matrix):
     normalized_matrix = (matrix - min_val) / (max_val - min_val)
     return normalized_matrix
 
-def cramers_v(data):
+import concurrent.futures
+
+def _compute_cramers_val(data, i, j):
+    """
+    Helper function to compute Cramér's V value for the (i, j) column pair.
+    Returns a tuple (i, j, cramers_v_val).
+    """
+    col1 = data.columns[i]
+    col2 = data.columns[j]
+    # Compute crosstab between the two columns
+    confusion_matrix = pd.crosstab(data[col1], data[col2])
+    # Calculate chi2 statistic
+    chi2 = ss.chi2_contingency(confusion_matrix)[0]
+    n = confusion_matrix.values.sum()
+    phi2 = chi2 / n
+    r, k = confusion_matrix.shape
+    # Apply correction for bias
+    phi2corr = max(0, phi2 - ((k - 1) * (r - 1)) / (n - 1))
+    rcorr = r - ((r - 1) ** 2) / (n - 1)
+    kcorr = k - ((k - 1) ** 2) / (n - 1)
+    # Compute Cramér's V
+    cramers_v_val = np.sqrt(phi2corr / max(1e-12, min((kcorr - 1), (rcorr - 1))))
+    if min(kcorr, rcorr) == 1:
+        cramers_v_val = 0
+    return (i, j, cramers_v_val)
+
+def parallel_cramers_v(data):
+    """
+    Compute the Cramér's V matrix for all pairs of columns in `data` in parallel.
+    
+    Parameters:
+        data (pd.DataFrame): DataFrame with categorical columns.
+    
+    Returns:
+        np.ndarray: A symmetric matrix with Cramér's V values.
+    """
     num_cols = len(data.columns)
-    cramer_matrix = np.zeros((num_cols, num_cols))  # Using a numpy array for efficiency
+    cramer_matrix = np.zeros((num_cols, num_cols))
+    
+    # Build list of all unique column pairs (i, j) with i < j
+    pairs = [(i, j) for i in range(num_cols) for j in range(i+1, num_cols)]
+    
+    # Use ProcessPoolExecutor to parallelize the computation.
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        # Submit all tasks and collect futures
+        futures = {executor.submit(_compute_cramers_val, data, i, j): (i, j) for i, j in pairs}
+        for future in concurrent.futures.as_completed(futures):
+            i, j, val = future.result()
+            cramer_matrix[i, j] = val
+            cramer_matrix[j, i] = val
 
-    for i in range(num_cols):
-        for j in range(i + 1, num_cols):
-            # Select columns and check if categorical
-            col1, col2 = data.columns[i], data.columns[j]            
-            confusion_matrix = pd.crosstab(data[col1], data[col2])
-            chi2 = ss.chi2_contingency(confusion_matrix)[0]
-            n = confusion_matrix.sum().sum()
-            phi2 = chi2 / n
-            r, k = confusion_matrix.shape
-            phi2corr = max(0, phi2 - ((k - 1) * (r - 1)) / (n - 1))
-            rcorr = r - ((r - 1) ** 2) / (n - 1)
-            kcorr = k - ((k - 1) ** 2) / (n - 1)
-            cramers_v_val = np.sqrt(phi2corr / max(1E-12,min((kcorr - 1), (rcorr - 1))))
-            if min((kcorr,rcorr))==1:
-                cramers_v_val=0
-            cramer_matrix[i, j] = cramers_v_val
-            cramer_matrix[j, i] = cramers_v_val
-
-    # Set diagonal values to 1
+    # Set the diagonal to 1 (each variable perfectly correlates with itself)
     np.fill_diagonal(cramer_matrix, 1)
-
-    # Convert to DataFrame for better readability
-    #cramer_df = pd.DataFrame(cramer_matrix, index=data.columns, columns=data.columns)
     return cramer_matrix
 
 # Function to plot heatmap for Theil's U matrix
@@ -1340,7 +1392,7 @@ def plot_all(df,save_folder,column_name='amino_acid_sequence',theil=False,chi=Fa
     df_ex = df_ex.apply(lambda x: x.astype("object") if x.dtype == "category" else x)
 
     if chi:
-        cramers = cramers_v(df_ex)
+        cramers = parallel_cramers_v(df_ex)
         plot_heatmap(cramers[::-1,:],x_label='Residue',y_label='Residue',name='Cramers.png',save_folder=save_folder)
 
     if theil:
@@ -1348,10 +1400,6 @@ def plot_all(df,save_folder,column_name='amino_acid_sequence',theil=False,chi=Fa
                 nom_nom_assoc = 'theil',
                 compute_only =True,
                 nan_strategy='drop_samples')
-
-        # Calculate Theil's U matrix
-        #theils_u_matrix = calculate_theils_u_matrix(df,column_name=column_name)
-        #normalized_theils_u_matrix = normalize_theils_u(theils_u_matrix)
 
         # Plot Theil's U heatmap
         plot_heatmap(theils_u['corr'].to_numpy()[::-1,:],save_folder=save_folder)

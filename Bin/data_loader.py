@@ -74,16 +74,23 @@ def reduce_aligned_to_unaligned(aligned_seq, aligned_scores):
             unaligned_scores.append(aligned_scores[i])
     return unaligned_scores
 
-def main_loader(aligned_seq,unaligned_seq,elbo_path,plmc_path,hotspot_path):
+def main_loader(aligned_seq,unaligned_seq,elbo_path=None,plmc_path=None,hotspot_path=None):
 
-    hotspot_data = construct_value_list_hotspot(unaligned_seq, hotspot_path)
-    hotspot_data = map_scores_to_aligned(aligned_seq, hotspot_data)
+    data = []
 
-    plmc_val,plmc_neg = load_and_convert_plmc(plmc_path)
-
-    pos_elbo, neg_elbo, abs_elbo = construct_elbo_lists(aligned_seq,elbo_path)
-
-    data = [hotspot_data,plmc_val,plmc_neg, pos_elbo, neg_elbo, abs_elbo]
+    if hotspot_path:
+        hotspot_data = construct_value_list_hotspot(unaligned_seq, hotspot_path)
+        hotspot_data = map_scores_to_aligned(aligned_seq, hotspot_data)
+        data.append(hotspot_data)
+    if plmc_path:
+        plmc_val,plmc_neg = load_and_convert_plmc(plmc_path)
+        data.append(plmc_val)
+        data.append(plmc_neg)
+    if elbo_path:
+        pos_elbo, neg_elbo, abs_elbo = construct_elbo_lists(aligned_seq,elbo_path)
+        data.append(pos_elbo)
+        data.append(neg_elbo)
+        data.append(abs_elbo)
 
     new_data = [reduce_aligned_to_unaligned(aligned_seq,data_i) for data_i in data]
 

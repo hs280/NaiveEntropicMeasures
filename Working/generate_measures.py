@@ -57,9 +57,9 @@ for i in range(len(MSA_list)):
     entropies_data = f"{outfile}/entropies_data.pkl"
     information_data = f"{outfile}/information_data.pkl"
 
-    #Bin.handle_info_theory('n',aligned_residues_df,outfile,cross_correl_data,entropies_data,
-    #                    'y',outfile,target_df,information_data,
-    #                    )
+    Bin.handle_info_theory('n',aligned_residues_df,outfile,cross_correl_data,entropies_data,
+                        'y',outfile,target_df,information_data,
+                        )
 
     entropies_paths.append(entropies_data)
     inormation_data_paths.append(information_data)
