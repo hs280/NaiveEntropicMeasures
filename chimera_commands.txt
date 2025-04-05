@@ -1,0 +1,12 @@
+movie record format png
+wait 1
+turn x 0.75 480; wait 480
+turn y 0.75 480; wait 480
+movie stop
+movie encode  ent_rotation.mp4
+
+movie record format png directory C:\Users\some4719\Desktop\ChimeraPdbs\elbo prefix frame_
+wait 1
+turn x 0.75 480; wait 480
+turn y 0.75 480; wait 480
+movie stop

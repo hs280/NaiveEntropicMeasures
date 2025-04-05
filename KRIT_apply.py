@@ -75,8 +75,9 @@ if __name__ == "__main__":
     target_file   = "./Data/Antibodies/pred_affinity.dat"
     output_folder = "./TestResults/Antibodies"
     protein_name  = "COV Antibodies"
-    
-    run_analysis(msa_file, target_file, output_folder, protein_name)
+    results_folder = output_folder
+
+    run_analysis(msa_file, target_file, output_folder, protein_name,results_folder)
 
 
     

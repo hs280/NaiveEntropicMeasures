@@ -6,6 +6,8 @@ import Bin as Bin
 from typing import Tuple
 import pandas as pd
 import seaborn as sns
+from sklearn.metrics import f1_score
+
 
 def process_fasta(file_path: str) -> Tuple[str, str]:
     with open(file_path, 'r') as file:
@@ -131,102 +133,214 @@ def process_pdb_for_projections(pdb_path, importance_dict, surface_threshold=30)
     }
 
 
-def plot_residue_projections(projection_data, layout='grid', figsize=None, cmap='coolwarm', 
-                            point_size=40, dpi=1200, out_file=None):
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.svm import SVC
+from matplotlib.lines import Line2D
+
+def generate_contours(phi_deg, theta_deg, imp_values, percentiles):
     """
-    Plot residue importance projections based on processed data.
+    Generate nested SVM decision boundaries for given percentiles.
     
     Parameters:
-        projection_data (dict): Processed data from process_pdb_for_projections function
-        layout (str): 'grid' for grid layout or 'horizontal' for horizontal layout
-        figsize (tuple): Figure size (width, height) in inches, or None for auto
-        cmap (str or matplotlib.colors.Colormap): Colormap for the plots
-        point_size (int): Size of the scatter points
-        dpi (int): DPI for saving the figure
-        out_file (str): Optional path to save the resulting plot
-        
-    Returns:
-        tuple: (fig, axes) matplotlib figure and axes objects
-    """
-    import matplotlib.pyplot as plt
-    import numpy as np
-    import math
+        phi_deg (array): Array of phi angle values.
+        theta_deg (array): Array of theta angle values.
+        imp_values (array): Array of importance values.
+        percentiles (list): List of percentiles to compute thresholds.
     
-    # Extract data
+    Returns:
+        list: Contour data for each percentile.
+    """
+    X = np.column_stack((phi_deg, theta_deg))
+    x_min, x_max = -180, 180
+    y_min, y_max = 0, 180
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 300),
+                         np.linspace(y_min, y_max, 300))
+    grid_points = np.c_[xx.ravel(), yy.ravel()]
+    
+    contour_data = []
+    
+    # Sort percentiles in descending order (N, N-1, N-2, ..., 1)
+    sorted_percentiles = sorted(percentiles, reverse=True)
+    
+    # First, compute thresholds for each percentile
+    thresholds = []
+    for perc in sorted_percentiles:
+        threshold_value = 1 - perc / 100
+        thresholds.append(threshold_value)
+    
+    # Process percentiles in order, creating nested contours
+    for i, perc in enumerate(sorted_percentiles):
+
+        # For each point, check if it belongs to current or higher percentile
+        current_threshold = thresholds[i]
+        
+        # Create binary labels: 1 if importance >= current threshold
+        y_labels = (imp_values >= current_threshold).astype(int)
+        
+        
+        if sum(y_labels) == 0 or sum(y_labels) == len(y_labels):
+            continue  # Skip if all values are the same
+        
+        # Adjust C parameter based on class balance
+        class_balance = len(y_labels) / sum(y_labels) - 1
+        clf = SVC(kernel='rbf', gamma='scale', C=(len(y_labels) / sum(y_labels) - 1) * 20)
+        clf.fit(X, y_labels)
+        
+        Z = clf.decision_function(grid_points)
+        Z = Z.reshape(xx.shape)
+        
+        contour_data.append((xx, yy, Z))
+    
+    return enforce_nesting(contour_data)
+
+def enforce_nesting(contour_data):
+    """
+    Ensure that each contour is nested within the previous one.
+
+    Parameters:
+        contour_data (list): List of tuples (xx, yy, Z) representing decision boundaries.
+    
+    Returns:
+        list: Nested contour data where each Z is bounded by the one before it.
+    """
+    for i in range(1, len(contour_data)):
+        _, _, Z_prev = contour_data[i - 1]
+        _, _, Z_curr = contour_data[i]
+
+        # Ensure current contour Z is bounded by previous contour Z
+        Z_curr[Z_curr > Z_prev] = Z_prev[Z_curr > Z_prev]
+
+    return contour_data
+
+def plot_residue_projections(projection_data, percentiles=[10, 50],
+                             layout='grid', figsize=None, cmap='coolwarm',
+                             point_size=40, dpi=1200, out_file=None):
+    """
+    Plot the residue importance projections with overlaid SVM decision boundaries.
+    """
     phi_deg = projection_data['phi_deg']
     theta_deg = projection_data['theta_deg']
     importance_values = projection_data['importance_values']
     vmin = projection_data['vmin']
     vmax = projection_data['vmax']
     
-    xticks = [-180, 180]
-    yticks = [0, 180]
-    
     num_alg = len(importance_values)
+    ncols = min(3, num_alg) if layout == 'grid' else num_alg
+    nrows = (num_alg + ncols - 1) // ncols if layout == 'grid' else 1
+    figsize = figsize or (4.5 * ncols, 4.5 * nrows) if layout == 'grid' else (5 * num_alg, 5)
     
-    if layout == 'grid':
-        ncols = min(3, num_alg)
-        nrows = (num_alg + ncols - 1) // ncols
-        if figsize is None:
-            figsize = (4.5 * ncols, 4.5 * nrows)  # Adjusted for square aspect ratio
-    else:  
-        nrows, ncols = 1, num_alg
-        if figsize is None:
-            figsize = (5 * num_alg, 5)
-
     fig, axes = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
-
     plt.style.use('seaborn-v0_8-whitegrid')
-    base_fontsize = plt.rcParams.get('font.size', 14)
-    title_fontsize = base_fontsize + 4
-    axis_fontsize = base_fontsize + 2
     
-    last_sc = None
     flat_axes = axes.flatten()
-
+    colors = ['red', 'green', 'blue', 'orange']
+    
     for idx, (alg_name, imp_values) in enumerate(importance_values.items()):
         if idx < len(flat_axes):
             ax = flat_axes[idx]
-            last_sc = ax.scatter(phi_deg, theta_deg, c=imp_values, cmap=cmap,
-                                s=point_size, vmin=vmin, vmax=vmax, alpha=0.8, 
-                                edgecolors='black', linewidths=0.5)
+            sc = ax.scatter(phi_deg, theta_deg, c=imp_values, cmap=cmap,
+                            s=point_size, vmin=vmin, vmax=vmax, alpha=0.8,
+                            edgecolors='black', linewidths=0.5)
+            ax.set_title(alg_name)
             
-            ax.set_xlabel("Phi (°)", fontsize=axis_fontsize)
-            ax.set_ylabel("Theta (°)", fontsize=axis_fontsize)
-            ax.set_title(alg_name, fontsize=title_fontsize)
-            ax.set_xticks(xticks)
-            ax.set_yticks(yticks)
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
+            contour_data = generate_contours(phi_deg, theta_deg, imp_values, percentiles)
             
-            # Ensure square aspect ratio
-            #ax.set_aspect('equal', adjustable='box')
-
-    for i in range(idx+1, len(flat_axes)):
-        flat_axes[i].set_visible(False)
-
-
-
-    plt.suptitle("2D Projection of Surface Residue Values", fontsize=title_fontsize+2, y=0.98)
+            for i, (xx, yy, Z) in enumerate(contour_data):
+                ax.contour(xx, yy, Z, levels=[0], colors=colors[i % len(colors)],
+                           linewidths=2, linestyles='--')
     
-    # Increase spacing between subplots
     fig.subplots_adjust(wspace=0.4, hspace=0.4)
-
-
-    cbar = fig.colorbar(last_sc, ax=axes.ravel().tolist())
-    cbar.set_label("Residue Importance", fontsize=axis_fontsize+4)
-    # Set colorbar tick positions and labels to [0, 1]
-    cbar.set_ticks([0, 1])
-
-    # Increase font size of colorbar ticks
-    cbar.ax.tick_params(labelsize=axis_fontsize + 2)  # Adjust as needed
-
+    cbar = fig.colorbar(sc, ax=axes.ravel().tolist())
+    cbar.set_label("Residue Importance Ranking",fontsize=20)
+    
     if out_file:
         plt.savefig(out_file, dpi=dpi, bbox_inches='tight')
-
     plt.show()
-
+    
     return fig, axes
+
+def plot_f1_scores(projection_data, percentiles=list(range(5, 51, 5)),
+                   layout='grid', figsize=None, dpi=1200, out_file=None):
+    """
+    Plot a multi-panel figure showing the F1 score of the decision boundary
+    as a function of the percentile threshold for each algorithm.
+    """
+    phi_deg = projection_data['phi_deg']
+    theta_deg = projection_data['theta_deg']
+    importance_values = projection_data['importance_values']
+    
+    num_alg = len(importance_values)
+    ncols = min(3, num_alg) if layout == 'grid' else num_alg
+    nrows = (num_alg + ncols - 1) // ncols if layout == 'grid' else 1
+    figsize = figsize or (4.5 * ncols, 4.5 * nrows) if layout == 'grid' else (5 * num_alg, 5)
+    
+    fig, axes = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
+    plt.style.use('seaborn-v0_8-whitegrid')
+    
+    flat_axes = axes.flatten()
+    X = np.column_stack((phi_deg, theta_deg))
+    
+    for idx, (alg_name, imp_values) in enumerate(importance_values.items()):
+        if idx < len(flat_axes):
+            ax = flat_axes[idx]
+            f1_scores = []
+            
+            contour_data = generate_contours(phi_deg, theta_deg, imp_values, percentiles)
+            
+            for i, perc in enumerate(percentiles):
+                if i >= len(contour_data):
+                    continue
+                threshold_value = min(1 - perc / 100, max(imp_values))
+                y_true = (imp_values >= threshold_value).astype(int)
+                clf = SVC(kernel='rbf', gamma='scale', C=(len(y_true) / sum(y_true) - 1) * 20)
+                clf.fit(X, y_true)
+                y_pred = clf.predict(X)
+                score = f1_score(y_true, y_pred)
+                f1_scores.append(score)
+            
+            ax.plot(percentiles[:len(f1_scores)], f1_scores, marker='o', linestyle='-', color='black')
+            for i, perc in enumerate(percentiles[:len(f1_scores)]):
+                ax.scatter(perc, f1_scores[i], s=60, edgecolors='black')
+            
+            ax.set_xlabel("Percentile Threshold")
+            ax.set_ylabel("F1 Score")
+            ax.set_title(alg_name)
+            ax.set_xticks(percentiles)
+            ax.set_ylim(0, 1)
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+    
+    for j in range(idx + 1, len(flat_axes)):
+        flat_axes[j].set_visible(False)
+    
+    fig.subplots_adjust(wspace=0.4, hspace=0.4)
+    if out_file:
+        plt.savefig(out_file, dpi=dpi, bbox_inches='tight')
+    plt.show()
+    
+    return fig, axes
+
+def normalize_values(values):
+    """Rank the list from 0 to len(values) - 1 based on the values, handling ties."""
+    # Create a sorted list of tuples (original index, value)
+    values = list(values)
+    sorted_values = sorted(enumerate(values), key=lambda x: x[1])
+    
+    # Create a ranking list with the same length as values
+    ranks = [0] * len(values)
+    
+    # Initialize the rank counter
+    rank = 0
+    
+    # Iterate through the sorted list and assign ranks, handling ties
+    for i in range(len(values)):
+        # If it's not the first value or if the current value is different from the previous one
+        if i > 0 and sorted_values[i][1] != sorted_values[i-1][1]:
+            rank = i  # Set rank to current index
+        ranks[sorted_values[i][0]] = rank
+    
+    return [r/(len(ranks)-1) for r in ranks]
 
 def plot_residue_projections_multiple(pdb_path, importance_dict, surface_threshold=30, out_file=None):
     """
@@ -248,6 +362,8 @@ def plot_residue_projections_multiple(pdb_path, importance_dict, surface_thresho
     
     # Plot the projections
     fig, axes = plot_residue_projections(projection_data, out_file=out_file)
+
+    plot_f1_scores(projection_data, out_file="TestResults/Antibodies/pdbs/f1_scores.png")
     
     return fig, axes
 
@@ -275,7 +391,7 @@ def plot_nature_style_bar(csv_path1, csv_path2, output_path=None):
 
     # Nature-style figure settings
     sns.set_style("whitegrid")
-    plt.figure(figsize=(6, 8))
+    plt.figure(figsize=(3, 8))
 
     # Create bar plot with specified colors
     ax = sns.barplot(data=df1, x="Key", y="Value", palette=colors)
@@ -322,7 +438,9 @@ if __name__ == "__main__":
     algorithm_names = names_list
     importance_dict = dict(zip(names_list, values_list))
 
-    plot_residue_projections_multiple(input_pdb, importance_dict=importance_dict, out_file="TestResults/Antibodies/pdbs/projection.png")
+    normalized_imp_dict = dict(zip(names_list, [normalize_values(v) for v in values_list]))
+
+    plot_residue_projections_multiple(input_pdb, importance_dict=normalized_imp_dict, out_file="TestResults/Antibodies/pdbs/projection.png")
 
     plot_nature_style_bar('TestResults/Antibodies/naive_analysis/merit_values.csv', 
                           'TestResults/Antibodies/existing_analysis/merit_values.csv', 
