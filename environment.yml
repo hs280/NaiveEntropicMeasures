@@ -1,0 +1,41 @@
+name: KRIT
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - aiohttp-cors
+  - alphashape
+  - biopython
+  - colorama
+  - colorful
+  - dython
+  - grpcio
+  - importlib-metadata
+  - importlib-resources
+  - lightgbm
+  - linkify-it-py
+  - mdit-py-plugins
+  - memray
+  - munkres
+  - numba
+  - opencensus
+  - openpyxl
+  - optuna
+  - prometheus-client
+  - py-spy
+  - pydantic
+  - pyqt
+  - qdarkstyle
+  - ray
+  - sip
+  - smart-open
+  - toml
+  - tomli
+  - tornado
+  - virtualenv
+  - xgboost
+  - pip  
+  - pip:
+      - memray         
+      - py-spy         
+      - linkify-it-py  

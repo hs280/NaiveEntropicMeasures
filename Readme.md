@@ -19,14 +19,15 @@ Paper link: [Decoupled Information Theoretic Feature Selection for Rapid Protein
 - [Contact](#contact)
 
 ## Installation
-The code is designed to be run in a Python environment. It has been tested on Python 3.8 and above. The code is compatible with both Windows and Linux operating systems. The code requires several Python packages, including NumPy, SciPy, Matplotlib, Seaborn, and scikit-learn. These packages can be installed using pip or conda. Requirements for python installation are listed in the requirements.txt file. To install the environment with anaconda use the following command:
+The code is designed to be run in a Python environment. It has been tested on Python 3.8 and above. The code is compatible with both Windows and Linux operating systems. The code requires several Python packages, including NumPy, SciPy, Matplotlib, Seaborn, and scikit-learn. These packages can be installed using pip or conda. Requirements for python installation are listed in the requirements.txt file. To install the environment with anaconda use the following commands:
 
 ```bash
 conda create -n <env_name> python=3.8
-```
-To install the required packages, use the following command:
-```bash
 pip install -r requirements.txt
+```
+or 
+```bash
+conda env create -f environment.yml
 ```
 
 # KRiT Analysis Tool
