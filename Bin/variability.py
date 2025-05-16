@@ -24,39 +24,108 @@ from matplotlib.ticker import AutoMinorLocator
 
 import pickle 
 import os
+from typing import Optional, List
 
 
+def remake_plots(
+    entropies_data: Optional[str] = None,
+    information_data: Optional[str] = None,
+    cross_correl_data: str = './TestResults/cross_correlations.pkl',
+    save_folder: Optional[str] = None,
+    protein_family: Optional[str] = None
+) -> None:
+    """
+    Generate various plots (heatmaps, multipanel plots, autocorrelation) from
+    precomputed entropy, mutual information, and cross-correlation data.
 
-def remake_plots(entropies_data,information_data,cross_correl_data,save_folder=None,Protein_Family = None):
+    Parameters
+    ----------
+    entropies_data : Optional[str]
+        Path to the pickle file containing entropy results. If None, entropy plots are skipped.
+    information_data : Optional[str]
+        Path to the pickle file containing mutual information results. If None, MI plots are skipped.
+    cross_correl_data : str
+        Path to the pickle file containing cross-correlation matrices. Default: './TestResults/cross_correlations.pkl'
+    save_folder : Optional[str]
+        Directory in which to save generated plots. If None, plots will be saved in the current working directory.
+    protein_family : Optional[str]
+        Label to use in the autocorrelation multipanel plot title. If None, no family label is added.
+
+    Returns
+    -------
+    None
+    """
+    # Load cross-correlation data
     with open(cross_correl_data, 'rb') as f:
-        theil_full,chi_full = pickle.load(f)
+        theil_full, chi_full = pickle.load(f)
 
-    with open(entropies_data, 'rb') as f:
-        entropy_full,entropy_adjusted_th,entropy_adjusted_chi = pickle.load(f)
+    # Optionally load entropy data
+    entropy_full = entropy_adjusted_th = entropy_adjusted_chi = None
+    if entropies_data:
+        with open(entropies_data, 'rb') as f:
+            entropy_full, entropy_adjusted_th, entropy_adjusted_chi = pickle.load(f)
 
-    with open(information_data, 'rb') as f:
-        mi_full,mi_adjusted_th,mi_adjuested_chi = pickle.load(f)
-    
-    plot_heatmap(chi_full[::-1,:],x_label='Residue Location',y_label='Residue Location',name='Cramers.png',Label = 'Cramer\'s V',save_folder=save_folder)
+    # Optionally load mutual information data
+    mi_full = mi_adjusted_th = mi_adjusted_chi = None
+    if information_data:
+        with open(information_data, 'rb') as f:
+            mi_full, mi_adjusted_th, mi_adjusted_chi = pickle.load(f)
+
+    # Plot Cramer's V heatmap
+    plot_heatmap(
+        chi_full[::-1, :],
+        x_label='Residue Location',
+        y_label='Residue Location',
+        name="Cramers.png",
+        Label="Cramer's V",
+        save_folder=save_folder
+    )
 
     # Plot Theil's U heatmap
-    plot_heatmap(theil_full[::-1,:],save_folder=save_folder,Label = 'Theil\'s U')
+    plot_heatmap(
+        theil_full[::-1, :],
+        save_folder=save_folder,
+        Label="Theil's U"
+    )
 
-    plot_entropy_multipanel([entropy_full,entropy_adjusted_th,entropy_adjusted_chi],
-                                    ['Entropy','Theil Entropy','Cramer Entropy'],
-                                    save_folder=save_folder,
-                                    fig_name='entropy_multi_plot.png')
-    
-    plot_entropy_multipanel([mi_full,mi_adjusted_th,mi_adjuested_chi],
-                                ['MI','Theil MI','Cramer MI'],
-                                save_folder=save_folder,
-                                fig_name='MI_multi_plot.png')
-    
-    plot_autocorr_multipanel([entropy_full,entropy_adjusted_th,entropy_adjusted_chi,mi_full,mi_adjusted_th,mi_adjuested_chi],
-                                ['Entropy','Theil Entropy','Cramer Entropy','MI','Theil MI','Cramer MI'],
-                                save_folder=save_folder,
-                                fig_name='autocorr_multi_plot.png',
-                                protein_family= Protein_Family)
+    # Plot entropy multipanel if data provided
+    if entropy_full is not None:
+        plot_entropy_multipanel(
+            [entropy_full, entropy_adjusted_th, entropy_adjusted_chi],
+            ['Entropy', 'Theil Entropy', 'Cramer Entropy'],
+            save_folder=save_folder,
+            fig_name='entropy_multi_plot.png'
+        )
+
+    # Plot mutual information multipanel if data provided
+    if mi_full is not None:
+        plot_entropy_multipanel(
+            [mi_full, mi_adjusted_th, mi_adjusted_chi],
+            ['MI', 'Theil MI', 'Cramer MI'],
+            save_folder=save_folder,
+            fig_name='MI_multi_plot.png'
+        )
+
+    # Plot autocorrelation multipanel: combine available data and labels
+    data_list: List = []
+    labels: List[str] = []
+
+    if entropy_full is not None:
+        data_list.extend([entropy_full, entropy_adjusted_th, entropy_adjusted_chi])
+        labels.extend(['Entropy', 'Theil Entropy', 'Cramer Entropy'])
+    if mi_full is not None:
+        data_list.extend([mi_full, mi_adjusted_th, mi_adjusted_chi])
+        labels.extend(['MI', 'Theil MI', 'Cramer MI'])
+
+    if data_list:
+        plot_autocorr_multipanel(
+            data_list,
+            labels,
+            save_folder=save_folder,
+            fig_name='autocorr_multi_plot.png',
+            protein_family=protein_family
+        )
+
 
 def plot_autocorr_multipanel(listin,names,save_folder,fig_name,protein_family):
     list_out = []
@@ -69,9 +138,17 @@ def plot_autocorr_multipanel(listin,names,save_folder,fig_name,protein_family):
         cbar_label = protein_family
     plot_colormap_rnyttopy_mp(list_out, y_labels=names, save_folder=save_folder, fig_name=fig_name,fig_size=(11.69/1.5,11.69/1.5),xlabel='other',cbar_label=cbar_label)
     
-def handle_info_theory(calculate_entropy_flag,aligned_residues_df,entropy_directory,cross_correl_data,entropies_data,
-                       calculate_information_flag,information_directory,target_df,information_data,
-                       ):
+def handle_info_theory(
+    calculate_entropy_flag: str = 'y',
+    aligned_residues_df=None,
+    entropy_directory: str = None,
+    cross_correl_data=None,
+    entropies_data=None,
+    calculate_information_flag: str = 'y',
+    information_directory: str = None,
+    target_df=None,
+    information_data=None,
+    ):
     if calculate_entropy_flag =="y":
         print('calculate entropies')
         entropy_full, theil_full, chi_full = plot_all(aligned_residues_df, save_folder=entropy_directory, column_name='Sequence',theil=True,chi=True)
