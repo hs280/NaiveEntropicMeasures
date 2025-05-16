@@ -40,15 +40,19 @@ Run the script from the command line:
 ```bash
 python Krit_apply.py -m <msa_file> -t <target_property_file> -o <output_folder> -n <protein_name>
 ```
-### Parameters
-Argument	Type	Description	Default
--m, --msa_file	str	Path to the input MSA file in FASTA format	./Data/Antibodies/sequences.fasta
--t, --target_file	str	Path to the file containing target property values (e.g., predicted affinity)	./Data/Antibodies/pred_affinity.dat
--o, --output_folder	str	Folder to store output files. Created automatically if missing	./TestResults/Antibodies
--n, --protein_name	str	Name of the protein. Used for labeling and output filenames	"COV Antibodies"
---no_entropy	flag	Disable entropy calculation and plotting	(entropy on by default)
---no_information	flag	Disable mutual information (MI) calculation and plotting	(MI on by default)
--h, --help	flag	Show help message and exit
+
+### Command Line Arguments
+The following parameters can be specified when running the script:
+| Argument	| Type	| Description	| Default |
+|----------------|----------------|------------------------------------------------------------------|----------------|
+| -m, --msa_file	| str	| Path to the input MSA file in FASTA format	| ./Data/Antibodies/sequences.fasta |
+| -t, --target_file	| str	| Path to the file containing target property values (e.g., predicted affinity)	| ./Data/Antibodies/pred_affinity.dat |
+| -o, --output_folder	| str	| Folder to store output files. Created automatically if missing	| ./TestResults/Antibodies |
+| -n, --protein_name	| str	| Name of the protein. Used for labeling and output filenames	| "COV Antibodies" |
+| --no_entropy	| flag	| Disable entropy calculation and plotting	| (entropy on by default) |
+| --no_information	| flag	| Disable mutual information (MI) calculation and plotting	| (MI on by default) |
+| -h, --help	| flag	| Show help message and exit	|  |
+
 
 When run without any arguments the script will launch a GUI for selecting the input files and parameters. The GUI will also allow you to select the output folder and protein name. 
 
