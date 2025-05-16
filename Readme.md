@@ -77,3 +77,14 @@ The script generates several output files and plots in the specified output fold
 This work is licensed under a [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
 ![CC BY-NC-SA 4.0](https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png)
+
+## Acknowledgements
+This work was supported by the [ESPRCC](https://www.ukri.org/councils/epsrc/) (EP/M002403/1 and EP/Y014073/1) and the [University of Oxford](https://www.ox.ac.uk/). We thank the University of Oxford for providing the computational resources and support for this research.
+We also acknowledge the use of [DeepSequence](https://github.com/debbiemarkslab/DeepSequence), [HotspotWizard](https://doi.org/10.1093/nar/gky417), and [EVCouplings](https://github.com/debbiemarkslab/EVcouplings) for benchmarking our methods. We thank the authors of these tools for their contributions to the field of protein engineering and bioinformatics. We also acknowledge the use of [BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi) for generating the MSA data used in this study. The BLAST tool is a widely used and powerful tool for sequence alignment and similarity searching, and we thank the developers for their contributions to the field of bioinformatics. We also acknowledge the use of [ClusPro](https://cluspro.org/help.php) for antibody-antigen docking simulations. ClusPro is a powerful tool for predicting antibody-antigen interactions, and we thank the developers for their contributions to the field of structural biology.
+
+## Contact
+For any questions or issues related to the code, please contact:
+- Haris Saeed: [haris.saeed@eng.ox.ac.uk](mailto:haris.saeed@eng.ox.ac.uk)
+
+
+
