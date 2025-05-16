@@ -6,20 +6,18 @@ Paper link: [Decoupled Information Theoretic Feature Selection for Rapid Protein
 
 ## Authors
 - [Haris Saeed](https://hs280portfolio.netlify.app/)
-- [Aidong Yang]
-- [Wei Huang]
+- Aidong Yang
+- Wei Huang
 
 ## Table of Contents
-- [Codebase for "Decoupled Information Theoretic Feature Selection for Rapid Protein Key Tuning Residue Identification"](
-    # Codebase for "Decoupled Information Theoretic Feature Selection for Rapid Protein Key Tuning Residue Identification"
-    - [Table of Contents](#table-of-contents)
-    - [Installation](#installation)
-    - [KRiT Analysis Tool](#krit-analysis-tool)
-        - [Usage](#usage)
-        - [Outputs](#outputs)
-    - [License](#license)
-    - [Acknowledgements](#acknowledgements)
-    - [Contact](#contact)
+- [Table of Contents](#table-of-contents)
+- [Installation](#installation)
+- [KRiT Analysis Tool](#krit-analysis-tool)
+    - [Usage](#usage)
+    - [Outputs](#outputs)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
+- [Contact](#contact)
 
 ## Installation
 The code is designed to be run in a Python environment. It has been tested on Python 3.8 and above. The code is compatible with both Windows and Linux operating systems. The code requires several Python packages, including NumPy, SciPy, Matplotlib, Seaborn, and scikit-learn. These packages can be installed using pip or conda. Requirements for python installation are listed in the requirements.txt file. To install the environment with anaconda use the following command:
