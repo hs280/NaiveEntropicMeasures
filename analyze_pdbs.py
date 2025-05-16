@@ -1061,7 +1061,7 @@ if __name__ == "__main__":
     ## existing method 
     identified_residues_folder = './Data/Antibodies/key_tuning_residues_no_rep.csv'
     exist_data = create_annotated_lists(identified_residues_folder, len(focus))
-    exist_legends = ['delta_elbo', 'neg_delta_elbo', 'abs_delta_elbo']
+    exist_legends = ['DeepSequence+', 'DeepSequence-', 'Abs(DeepSequence)']
 
 
     values_list = data+exist_data # Replace with actual list of lists of values
