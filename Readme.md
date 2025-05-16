@@ -10,7 +10,6 @@ Paper link: [Decoupled Information Theoretic Feature Selection for Rapid Protein
 - Wei Huang
 
 ## Table of Contents
-- [Table of Contents](#table-of-contents)
 - [Installation](#installation)
 - [KRiT Analysis Tool](#krit-analysis-tool)
     - [Usage](#usage)
