@@ -1,15 +1,7 @@
-<table>
-  <tr>
-    <td width="150">
-      <img src="KRIT.png" alt="Project Logo" width="120"/>
-    </td>
-    <td>
-      <h1>
-        Codebase for <em>"Decoupled Information Theoretic Feature Selection for Rapid Protein Key Tuning Residue Identification"</em>
-      </h1>
-    </td>
-  </tr>
-</table>
+<p align="left">
+  <img src="KRIT.png" alt="Project Logo" width="100" style="vertical-align: middle; margin-right: 10px;">
+  <strong style="font-size: 24px;">Codebase for <em>"Decoupled Information Theoretic Feature Selection for Rapid Protein Key Tuning Residue Identification"</em></strong>
+</p>
 
 
 
