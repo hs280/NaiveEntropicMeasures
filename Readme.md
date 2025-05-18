@@ -1,4 +1,17 @@
-# Codebase for "Decoupled Information Theoretic Feature Selection for Rapid Protein Key Tuning Residue Identification"
+<table>
+  <tr>
+    <td width="150">
+      <img src="KRIT.png" alt="Project Logo" width="120"/>
+    </td>
+    <td>
+      <h1>
+        Codebase for <em>"Decoupled Information Theoretic Feature Selection for Rapid Protein Key Tuning Residue Identification"</em>
+      </h1>
+    </td>
+  </tr>
+</table>
+
+
 
 Identifying key residues that govern protein function, stability, and interactions remains a significant challenge in protein engineering. We present an information-theoretic approach, inspired by signal processing methods to detect such ‘key tuning’ residues from protein sequences. Our approach integrates both unsupervised and supervised methods using Shannon entropy and mutual information as initial priors, respectively. A key aspect of our method is the use of Cramer's V and Thiel's U to decouple coevolved residues. The supervised method combining mutual information and evolutionary decoupling,  significantly outperforms an existing state of the art, DeepSequence, (pvalue=0.0149). The unsupervised approach that requires only a BLAST derived multiple sequence alignment (MSA) offers a simple yet competitive alternative (pvalue=0.14). We validated our methods by applying them to three distinct protein datasets: Green Fluorescent Proteins (GFPs), rhodopsins, and alkanal monooxygenases, demonstrating a high predictive efficacy compared to established tools. When applied to well-characterised nanobody-antigen interactions, our methods not only effectively identified the binding residues but also accurately reconstructed a contiguous binding surface, surpassing current state-of-the-art computational tools. This work provides a flexible, interpretable, computationally efficient and transparent strategy for identifying key residues, paving the way for new strategies in rational protein design, enzyme optimization and drug discovery.
 
