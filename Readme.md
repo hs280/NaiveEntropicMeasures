@@ -32,7 +32,7 @@ Paper link: [Decoupled Information Theoretic Feature Selection for Rapid Protein
 - [Contact](#contact)
 
 ## Installation
-The code is designed to be run in a Python environment. It has been tested on Python 3.8 and above. The code is compatible with both Windows and Linux operating systems. The code requires several Python packages, including NumPy, SciPy, Matplotlib, Seaborn, and scikit-learn. These packages can be installed using pip or conda. Requirements for python installation are listed in the requirements.txt file. To install the environment with anaconda use the following commands:
+The base code is designed to be run in a Python environment. It has been tested on Python 3.8 and above. The code is compatible with both Windows and Linux operating systems. The code requires several Python packages, including NumPy, SciPy, Matplotlib, Seaborn, and scikit-learn. These packages can be installed using pip or conda. Requirements for python installation are listed in the requirements.txt file. To install the environment with anaconda use the following commands:
 
 ```bash
 conda create -n <env_name> python=3.8
@@ -42,6 +42,8 @@ or
 ```bash
 conda env create -f environment.yml
 ```
+
+When using executable only, this is not required and the code can be run from ./dist/KRIT 
 
 # KRiT Analysis Tool
 `Krit_apply.py` is a command-line tool for applying the **KRiT (Key Residue Identification Tool)** analysis pipeline to protein sequence data. It performs information-theoretic feature selection using MSA (multiple sequence alignment) and target property data to identify key tuning residues. As outlined in the paper, the tool uses a combination of unsupervised and supervised methods to achieve this.
@@ -72,6 +74,12 @@ When run without any arguments the script will launch a GUI for selecting the in
 ```bash
 python Krit_apply.py
 ```
+or 
+
+```bash 
+./dist/KRIT
+```
+
 
 ## Outputs
 The script generates several output files and plots in the specified output folder. The output includes:

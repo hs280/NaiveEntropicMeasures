@@ -207,10 +207,9 @@ class KritGUI(QtWidgets.QWidget):
         self.init_ui()
 
     def init_ui(self):
+        icon_path = os.path.join(curent_path, "KRIT.png")
+        self.setWindowIcon(QtGui.QIcon(icon_path))
         self.setWindowTitle('KRiT Analysis Tool')
-        self.setWindowIcon(QtGui.QIcon.fromTheme('applications-science'))
-        self.resize(700, 500)
-
         # Main layout and styling
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.setContentsMargins(15, 15, 15, 15)
@@ -339,6 +338,8 @@ if __name__ == "__main__":
     # If no args passed (only script name), launch GUI
     if len(sys.argv) == 1:
         app = QtWidgets.QApplication(sys.argv)
+        icon_path = os.path.join(curent_path, "KRIT.png")
+        app.setWindowIcon(QtGui.QIcon(icon_path))  # Set app-level icon
         app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
         gui = KritGUI()
         gui.show()
