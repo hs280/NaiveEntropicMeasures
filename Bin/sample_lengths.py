@@ -538,7 +538,7 @@ def plot_results(r2_data, rmse_data, lengths, max_seq_length, entropy_save_path)
     ### First 10% plots ###
 
     # Calculate the range corresponding to the first 10% of the sequence lengths
-    ten_percent_index = int(0.1 * len(lengths))
+    ten_percent_index = np.max([int(0.1 * len(lengths)), 5])
     lengths_10 = lengths[:ten_percent_index]
     r2_data_10 = r2_data[:ten_percent_index]
     rmse_data_10 = rmse_data[:ten_percent_index]
@@ -661,8 +661,7 @@ def search_sequence_lengths(save_folder,
                             split_fraction=0.2, 
                             max_seq_length=554, 
                             num_runs=3,
-                            file_names=['min','max','mean','boltzmann'],
-                            alpha=0):
+                            file_names=['min','max','mean','boltzmann']):
     with open(Data_path, 'rb') as f:
         entropy_data = pickle.load(f)
     
@@ -691,9 +690,8 @@ def search_sequence_lengths(save_folder,
     with open(f'{save_folder}/new_entropies.pkl', 'wb') as f:
         pickle.dump(new_entropies,f)
 
-    
-
     return f'{save_folder}/new_entropies.pkl', metrics
+    
 
 def sanitize_csv(file_path):
     # Read the CSV file

@@ -36,7 +36,7 @@ def process_data_based(seq_data_path,target_data_path,rank_data,save_path,file_n
                             aligned_residues_df, 
                             target_df, 
                             rank_data_path, 
-                            num_samples, 
+                            n_trials = num_samples, 
                             split_fraction=0.2, 
                             max_seq_length=max_seq_length, 
                             num_runs=5,
