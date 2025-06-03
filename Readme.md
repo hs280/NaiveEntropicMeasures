@@ -93,6 +93,11 @@ The script generates several output files and plots in the specified output fold
 - **Cross-correlation colormap**: A colormap showing the cross-correlations between residues.
 - **Pickle files**: Pickle files containing the cross-correlation, entropy, and mutual information data for the residues.
 
+## Generation of publication Figures
+In order to generate figures for publication there are two key scripts to run:
+- **./Working/generate_figures.py**: generates all figures for the non-antibody dataset
+- **./generate_figures_antibodies.py**: generates all non-structural figures for teh antibody dataset 
+
 ## License
 
 This work is licensed under a [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/).

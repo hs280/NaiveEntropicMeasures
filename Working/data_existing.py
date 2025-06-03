@@ -180,16 +180,16 @@ legends = ['HotspotWizard', 'EV+', 'EV-', 'Deep+', 'Deep-', 'Abs(Deep)']
 import time
 
 # Timing for amo_result
-# start_time = time.time()
-# amo_result = process_data_based(amo_seq_data, amo_target_data, data_amo, save_path_amo, legends)
-# end_time = time.time()
-# print(f"Time taken for amo_result: {end_time - start_time:.4f} seconds")
+start_time = time.time()
+amo_result = process_data_based(amo_seq_data, amo_target_data, data_amo, save_path_amo, legends)
+end_time = time.time()
+print(f"Time taken for amo_result: {end_time - start_time:.4f} seconds")
 
 # # Timing for gr_result
-# start_time = time.time()
-# gr_result = process_data_based(gr_seq_data, gr_target_data, data_gr, save_path_gr, legends)
-# end_time = time.time()
-# print(f"Time taken for gr_result: {end_time - start_time:.4f} seconds")
+start_time = time.time()
+gr_result = process_data_based(gr_seq_data, gr_target_data, data_gr, save_path_gr, legends)
+end_time = time.time()
+print(f"Time taken for gr_result: {end_time - start_time:.4f} seconds")
 
 # Timing for FP_result
 start_time = time.time()
@@ -198,16 +198,16 @@ end_time = time.time()
 print(f"Time taken for FP_result: {end_time - start_time:.4f} seconds")
 
 # Timing for FP_emission
-# start_time = time.time()
-# FP_emission = process_data_based(FP_seq_data, FP_emission_target_data, data_FP, save_path_FP_emission, legends)
-# end_time = time.time()
-# print(f"Time taken for FP_emission: {end_time - start_time:.4f} seconds")
+start_time = time.time()
+FP_emission = process_data_based(FP_seq_data, FP_emission_target_data, data_FP, save_path_FP_emission, legends)
+end_time = time.time()
+print(f"Time taken for FP_emission: {end_time - start_time:.4f} seconds")
 
 # # Timing for FP_qy
-# start_time = time.time()
-# FP_qy = process_data_based(FP_seq_data, FP_QY_target_data, data_FP, save_path_FP_QY, legends)
-# end_time = time.time()
-# print(f"Time taken for FP_qy: {end_time - start_time:.4f} seconds")
+start_time = time.time()
+FP_qy = process_data_based(FP_seq_data, FP_QY_target_data, data_FP, save_path_FP_QY, legends)
+end_time = time.time()
+print(f"Time taken for FP_qy: {end_time - start_time:.4f} seconds")
 
 
 
