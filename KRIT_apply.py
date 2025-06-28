@@ -12,6 +12,7 @@ import argparse
 import csv
 import pickle as pkl
 
+
 def save_dict_to_csv(data_dict, output_path):
     with open(output_path, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -154,7 +155,7 @@ def run_analysis(
             cross_corr_mat,
             labels,
             'CrossCorrelation',
-            os.path.join(results_folder, "cross_correlation_colormap.png")
+            save_path = os.path.join(results_folder, "cross_correlation_colormap.png")
         )
     except Exception as e:
         print(f"Error generating cross-correlation matrix: {e}")
@@ -186,7 +187,7 @@ class KritGUI(QtWidgets.QWidget):
         self.msa_line = QtWidgets.QLineEdit(placeholderText='Select MSA file (.fasta)')
         btn_msa = QtWidgets.QToolButton()
         btn_msa.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_DirOpenIcon))
-        btn_msa.clicked.connect(partial(self.browse_file, self.msa_line, 'MSA File', '*.fasta *.fa'))
+        btn_msa.clicked.connect(partial(self.browse_file, self.msa_line, 'MSA File', '*.fasta *.fa *.dat *.txt'))
         file_layout.addRow('MSA File:', self._with_button(self.msa_line, btn_msa))
 
         self.target_line = QtWidgets.QLineEdit(placeholderText='Select target file (.dat)')
